@@ -60,12 +60,12 @@ main p {
     }
 }
 
-.entry-content p:not(.tags) > a, .entry-content li > a {
+.mask :not(.tags,h1,h2,h3,h4) > a {
     color: var(--pico-color-amber-400);
     text-decoration-color: var(--pico-color-amber-400); 
 }
 
-.entry-content p:not(.tags) > a:hover, .entry-content li > a:hover {
+.mask :not(.tags,h1,h2,h3,h4) > a:hover {
     color: var(--pico-color-amber-500);
     text-decoration-color: var(--pico-color-amber-500); 
 }
