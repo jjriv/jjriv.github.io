@@ -1,0 +1,210 @@
+@charset "UTF-8";
+/*!
+ * Pico CSS ✨ v2.0.6 (https://picocss.com)
+ * Copyright 2019-2024 - Licensed under MIT
+ */
+:root {
+  --pico-color-grey-950: #111111;
+  --pico-color-grey-900: #1b1b1b;
+  --pico-color-grey-850: #262626;
+  --pico-color-grey-800: #303030;
+  --pico-color-grey-750: #3b3b3b;
+  --pico-color-grey-700: #474747;
+  --pico-color-grey-650: #525252;
+  --pico-color-grey-600: #5e5e5e;
+  --pico-color-grey-550: #6a6a6a;
+  --pico-color-grey-500: #777777;
+  --pico-color-grey-450: #808080;
+  --pico-color-grey-400: #919191;
+  --pico-color-grey-350: #9e9e9e;
+  --pico-color-grey-300: #ababab;
+  --pico-color-grey-250: #b9b9b9;
+  --pico-color-grey-200: #c6c6c6;
+  --pico-color-grey-150: #d4d4d4;
+  --pico-color-grey-100: #e2e2e2;
+  --pico-color-grey-50: #f1f1f1;
+  --pico-color-grey: #ababab;
+  /* these amber colors have not been handlebar adjusted */
+  /* to adjust, add 8 to r and g values */
+  --pico-color-amber-950: #161000;
+  --pico-color-amber-900: #231a00;
+  --pico-color-amber-850: #312300;
+  --pico-color-amber-800: #3f2d00;
+  --pico-color-amber-750: #4d3700;
+  --pico-color-amber-700: #5b4200;
+  --pico-color-amber-650: #694d00;
+  --pico-color-amber-600: #785800;
+  --pico-color-amber-550: #876400;
+/* these amber colors have been handlebar adjusted */
+  --pico-color-amber-500: #916A00;
+  --pico-color-amber-450: #af8400;
+  --pico-color-amber-400: #bf8e00;
+  --pico-color-amber-350: #cf9c00;
+  --pico-color-amber-300: #e0a900;
+  --pico-color-amber-250: #f0b600;
+  --pico-color-amber-200: #ffc700;
+  --pico-color-amber-150: #ffd463;
+  --pico-color-amber-100: #ffe6a6;
+  --pico-color-amber-50: #fff7d9;
+  --pico-color-amber: #ffc700;
+}
+
+.pico-color-grey-950 {
+  color: var(--pico-color-grey-950);
+}
+
+.pico-color-grey-900 {
+  color: var(--pico-color-grey-900);
+}
+
+.pico-color-grey-850 {
+  color: var(--pico-color-grey-850);
+}
+
+.pico-color-grey-800 {
+  color: var(--pico-color-grey-800);
+}
+
+.pico-color-grey-750 {
+  color: var(--pico-color-grey-750);
+}
+
+.pico-color-grey-700 {
+  color: var(--pico-color-grey-700);
+}
+
+.pico-color-grey-650 {
+  color: var(--pico-color-grey-650);
+}
+
+.pico-color-grey-600 {
+  color: var(--pico-color-grey-600);
+}
+
+.pico-color-grey-550 {
+  color: var(--pico-color-grey-550);
+}
+
+.pico-color-grey-500 {
+  color: var(--pico-color-grey-500);
+}
+
+.pico-color-grey-450 {
+  color: var(--pico-color-grey-450);
+}
+
+.pico-color-grey-400 {
+  color: var(--pico-color-grey-400);
+}
+
+.pico-color-grey-350 {
+  color: var(--pico-color-grey-350);
+}
+
+.pico-color-grey-300 {
+  color: var(--pico-color-grey-300);
+}
+
+.pico-color-grey-250 {
+  color: var(--pico-color-grey-250);
+}
+
+.pico-color-grey-200 {
+  color: var(--pico-color-grey-200);
+}
+
+.pico-color-grey-150 {
+  color: var(--pico-color-grey-150);
+}
+
+.pico-color-grey-100 {
+  color: var(--pico-color-grey-100);
+}
+
+.pico-color-grey-50 {
+  color: var(--pico-color-grey-50);
+}
+
+.pico-color-grey {
+  color: var(--pico-color-grey);
+}
+
+.pico-color-amber-950 {
+  color: var(--pico-color-amber-950);
+}
+
+.pico-color-amber-900 {
+  color: var(--pico-color-amber-900);
+}
+
+.pico-color-amber-850 {
+  color: var(--pico-color-amber-850);
+}
+
+.pico-color-amber-800 {
+  color: var(--pico-color-amber-800);
+}
+
+.pico-color-amber-750 {
+  color: var(--pico-color-amber-750);
+}
+
+.pico-color-amber-700 {
+  color: var(--pico-color-amber-700);
+}
+
+.pico-color-amber-650 {
+  color: var(--pico-color-amber-650);
+}
+
+.pico-color-amber-600 {
+  color: var(--pico-color-amber-600);
+}
+
+.pico-color-amber-550 {
+  color: var(--pico-color-amber-550);
+}
+
+.pico-color-amber-500 {
+  color: var(--pico-color-amber-500);
+}
+
+.pico-color-amber-450 {
+  color: var(--pico-color-amber-450);
+}
+
+.pico-color-amber-400 {
+  color: var(--pico-color-amber-400);
+}
+
+.pico-color-amber-350 {
+  color: var(--pico-color-amber-350);
+}
+
+.pico-color-amber-300 {
+  color: var(--pico-color-amber-300);
+}
+
+.pico-color-amber-250 {
+  color: var(--pico-color-amber-250);
+}
+
+.pico-color-amber-200 {
+  color: var(--pico-color-amber-200);
+}
+
+.pico-color-amber-150 {
+  color: var(--pico-color-amber-150);
+}
+
+.pico-color-amber-100 {
+  color: var(--pico-color-amber-100);
+}
+
+.pico-color-amber-50 {
+  color: var(--pico-color-amber-50);
+}
+
+.pico-color-amber {
+  color: var(--pico-color-amber);
+}

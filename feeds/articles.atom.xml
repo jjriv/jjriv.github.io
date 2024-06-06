@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv - articles</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/articles.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2024-06-04T00:00:00-07:00</updated><entry><title>A Simple Guide to Configuring and Hardening Ubuntu Server</title><link href="https://jjriv.com/articles/ubuntu-simple-configuration-hardening/" rel="alternate"></link><published>2024-06-04T00:00:00-07:00</published><updated>2024-06-04T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-04:/articles/ubuntu-simple-configuration-hardening/</id><summary type="html">&lt;p&gt;This tutorial covers the bare minimum configuration and hardening you should apply to any new Ubuntu server.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+
+&lt;p&gt;When you deploy a new Ubuntu server the default installation is not sufficient enough to protect it from getting compromised. This is especially true if you are using a popular cloud provider such as &lt;a href="https://linode.com"&gt;Linode&lt;/a&gt; or &lt;a href="https://digitalocean.com"&gt;Digital Ocean&lt;/a&gt;. Hackers are known to monitor the IP addresses they own, like sharks circling a reef looking for easy prey. Your newly created server will start getting scanned for vulnerabilities and sprayed with login attempts the moment it comes online. &lt;/p&gt;
+&lt;p&gt;This tutorial teaches you how to configure and harden Ubuntu server in a few simple steps. The purpose of this guide is to create a baselined server from which you can build your project. &lt;/p&gt;
+&lt;h3&gt;Step 1: Create Your User Account&lt;/h3&gt;
+&lt;p&gt;The first thing to do is to create a non root user you can use to log in to the server. Run the following command and answer each of the prompts. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;adduser jjriv
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Give your account to have sudo access so that it can run commands as root. This is necessary so that you can configure the server and install software without directly accessing the root account.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;usermod -aG sudo jreeve
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Create and Install your SSH Key&lt;/h3&gt;
+&lt;p&gt;The problem with password based authentication is that it&amp;rsquo;s too easy for hackers to guess your password. It&amp;rsquo;s better to use a SSH key, which is a lot like a key you would use to unlock a door. Unless you have the right key, the server won't let you in. &lt;/p&gt;
+&lt;p&gt;To create the key pair, run the following command on the server from which you&amp;rsquo;ll be connecting. Follow the prompts, giving your key a unique name to distinguish it from other keys you might have already created. When prompted for a passphrase, leave it blank.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-keygen
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The results of running the command should look like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;ssh-keygen
+Generating&lt;span class="w"&gt; &lt;/span&gt;public/private&lt;span class="w"&gt; &lt;/span&gt;rsa&lt;span class="w"&gt; &lt;/span&gt;key&lt;span class="w"&gt; &lt;/span&gt;pair.
+Enter&lt;span class="w"&gt; &lt;/span&gt;file&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;which&lt;span class="w"&gt; &lt;/span&gt;to&lt;span class="w"&gt; &lt;/span&gt;save&lt;span class="w"&gt; &lt;/span&gt;the&lt;span class="w"&gt; &lt;/span&gt;key&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;/home/jjriv/.ssh/id_rsa&lt;span class="o"&gt;)&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;/home/jjriv/.ssh/ubuntu
+Enter&lt;span class="w"&gt; &lt;/span&gt;passphrase&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;empty&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;no&lt;span class="w"&gt; &lt;/span&gt;passphrase&lt;span class="o"&gt;)&lt;/span&gt;:
+Enter&lt;span class="w"&gt; &lt;/span&gt;same&lt;span class="w"&gt; &lt;/span&gt;passphrase&lt;span class="w"&gt; &lt;/span&gt;again:
+Your&lt;span class="w"&gt; &lt;/span&gt;identification&lt;span class="w"&gt; &lt;/span&gt;has&lt;span class="w"&gt; &lt;/span&gt;been&lt;span class="w"&gt; &lt;/span&gt;saved&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;/home/jjriv/.ssh/ubuntu
+Your&lt;span class="w"&gt; &lt;/span&gt;public&lt;span class="w"&gt; &lt;/span&gt;key&lt;span class="w"&gt; &lt;/span&gt;has&lt;span class="w"&gt; &lt;/span&gt;been&lt;span class="w"&gt; &lt;/span&gt;saved&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;/home/jjriv/.ssh/ubuntu.pub
+The&lt;span class="w"&gt; &lt;/span&gt;key&lt;span class="w"&gt; &lt;/span&gt;fingerprint&lt;span class="w"&gt; &lt;/span&gt;is:
+SHA256:ApsRGMJE28I9Rp3WfBvfgIokmNvKD5hRP5FYa4Nevq4&lt;span class="w"&gt; &lt;/span&gt;jjriv@lucinda
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now that you&amp;rsquo;ve created your private and public key pair, the public key needs to be uploaded to the server. Run the following command and enter your password when prompted. Be sure to use the username and IP for your server.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;ssh&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="k"&gt;copy&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="kt"&gt;id&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;jjriv&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ssh&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;ubuntu&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;jjriv&lt;/span&gt;&lt;span class="mf"&gt;@1.2.3.4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;To verify your key is working, log in with it using the command below. If it was successful, you will be logged in without being asked to enter a password.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;ssh&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;jjriv&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;ssh&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;ubuntu&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;jjriv&lt;/span&gt;&lt;span class="mf"&gt;@1.2.3.4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 3: Configure SSH to Prevent Password and Root Login&lt;/h3&gt;
+&lt;p&gt;As mentioned above, password based logins are insecure. Therefore, we want to configure the server to not allow anyone to log in with anything other than a key. We also want to make it so that the root user can not log in. Here&amp;rsquo;s how.&lt;/p&gt;
+&lt;p&gt;Create a sshd config file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;vim /etc/ssh/sshd_config.d/lockdown.conf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Add the following two directives. THe first one tells the server to not let the root user log in. The second one tells the sever not to allow any password based logins.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;PermitRootLogin no
+PasswordAuthentication no
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then restart sshd:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;systemctl restart sshd
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 4: Configure the Server&amp;rsquo;s Firewall with UFW&lt;/h3&gt;
+&lt;p&gt;UFW stands for &lt;a href="https://www.digitalocean.com/community/tutorials/how-to-set-up-a-firewall-with-ufw-on-ubuntu"&gt;Uncomplicated Firewall&lt;/a&gt;. It&amp;rsquo;s the default firewall configuration tool for Ubuntu and was created to make security more user friendly. It works by walling off your server from all public access, except for the doors you allow it to keep open. &lt;/p&gt;
+&lt;p&gt;UFW is turned off by default. We want to configure it so that it&amp;rsquo;s automatically enabled and blocking every point of entry except one, SSH.&lt;/p&gt;
+&lt;p&gt;To accomplish that, we&amp;rsquo;ll add a rule that allows SSH:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo ufw allow ssh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now that we&amp;rsquo;ve created a firewall rule for SSH, let&amp;rsquo;s enable UFW:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ufw enable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now that you&amp;rsquo;ve disallowed root login, disallowed password authentication, and configured UFW, your server can only be accessed by someone with your username and key. This reduces the number of attack vectors exponentially.&lt;/p&gt;
+&lt;h3&gt;Step 5: Update the Server&lt;/h3&gt;
+&lt;p&gt;Keeping your server updated is equally as important for keeping it safe. Ubuntu will automatically apply any security patches by default. However, it&amp;rsquo;s best practice to regularly update all of the packages installed on your server.&lt;/p&gt;
+&lt;p&gt;To do this, we just need to run the package manager update with the following two commands:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo apt update
+sudo apt upgrade
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 6: Set the Hostname and Timezone&lt;/h3&gt;
+&lt;p&gt;Now that the server is secured we can tailor it by setting the hostname and timezone. To set the hostname, run this command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;hostnamectl set-hostname myhost.jjriv.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then change the timezone to your location:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;timedatectl set-timezone America/Los_Angeles
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Keep Security in Mind Going Forward&lt;/h3&gt;
+&lt;p&gt;Now that your server is configured and secure, it&amp;rsquo;s important to maintain a security mindset going forward. As you add more services, such as a web server, you&amp;rsquo;ll be opening up more than just a port. The service running on that port will also be exposed, including any vulnerabilities and misconfigurations it may have. Be sure to research and implement best practices for each and every service you install to keep your server secure.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Ubuntu"></category><category term="Security"></category></entry><entry><title>A Simplified Explanation of DMARC</title><link href="https://jjriv.com/articles/dmarc-simplified/" rel="alternate"></link><published>2024-05-28T00:00:00-07:00</published><updated>2024-05-28T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-05-28:/articles/dmarc-simplified/</id><summary type="html">&lt;p&gt;To help understand how DMARC compliance works, and why SPF and/or DKIM alignment is necessary, I find that a postal service analogy works best.&lt;/p&gt;</summary><content type="html">&lt;h2&gt;What is DMARC?&lt;/h2&gt;
+&lt;p&gt;DMARC, which stands for &lt;a href="https://dmarc.org/"&gt;Domain-based Message Authentication, Reporting &amp;amp; Conformance&lt;/a&gt;, is an email authentication protocol designed to give email senders the ability to prove ownership of their domain. &lt;/p&gt;
+&lt;p&gt;To be DMARC compliant, an email sender must correctly implement at least one of two protocols — SPF (&lt;a href="https://postmarkapp.com/guides/spf"&gt;Sender Policy Framework&lt;/a&gt;) and DKIM (&lt;a href="https://postmarkapp.com/guides/dkim"&gt;DomainKeys Identified Mail&lt;/a&gt;). Now that we've gotten all the acronyms out of the way, let's move on to why DMARC is important. &lt;/p&gt;
+&lt;p&gt;The simple truth is that email senders who are not DMARC compliant will find their emails &lt;a href="https://meetmarigold.com/blogs/2024-guide-to-google-yahoos-new-privacy-protections/"&gt;blocked by Gmail and Yahoo&lt;/a&gt;, and junked by many other mail providers. &lt;/p&gt;
+&lt;p&gt;SPF and DKIM are two different methodologies, however, they have the same outcome. When implemented correctly they provide proof that your emails were sent by you, not an impostor. &lt;/p&gt;
+&lt;p&gt;To help understand how they work, and why they are important, I find that a postal service analogy works best. Let's assume you want to mail a letter to one of your customers the old fashioned way, with an envelope and a stamp. Here's how SPF and DKIM would help ensure it gets delivered.&lt;/p&gt;
+&lt;h2&gt;SPF&lt;/h2&gt;
+&lt;p&gt;SPF provides a way for you to broadcast the address of your local post office to your customer, designating them as a safe deliverer. When you drop off the letter for delivery, the postal clerk stamps the envelope with their address. This allows your customer's mail person to verify your letter before putting it in their mailbox by comparing the stamped address on the envelope with the address you've made public. &lt;/p&gt;
+&lt;p&gt;However, there is a loophole that a bad actor could easily exploit. Because you've broadcasted the address of your local post office, anyone can send a letter on your behalf simply by dropping it off at the same location. To prevent this from happening, your letter must also be authenticated by the post office using a method called SPF alignment.&lt;/p&gt;
+&lt;p&gt;To authenticate your letter, the postal clerk first checks your identification. Once they've verified you as the rightful sender, they use a different stamp — one that still includes their address, but is unique to you. Before your customer's mail person drops off your letter they will now perform two checks. In addition to verifying that the stamped address matches the address you broadcasted, they will also make sure the stamp is the same unique one used by your local post office. &lt;/p&gt;
+&lt;p&gt;With SPF alignment implemented correctly, the letter can't be sent by anyone other than you. &lt;/p&gt;
+&lt;h2&gt;DKIM&lt;/h2&gt;
+&lt;p&gt;DKIM is similar to SPF. But, instead of broadcasting the post office address, you broadcast a sample of your handwriting. When you drop off the letter for delivery, you sign the envelope with your signature. Your customer's mail deliverer then compares your signature to the publicly available handwriting sample, verifying that they are a match before delivering your letter. When your signature matches, the letter is considered to be DKIM aligned.&lt;/p&gt;
+&lt;p&gt;If you drop off a letter without signing it, the postal clerk instead signs the envelope with her own signature that matches her broadcasted handwriting sample. Just like we saw with SPF, a bad actor could exploit this loophole by dropping off an unsigned letter at your local post office. Because the postal clerk's signature and handwriting sample are a match, the letter will pass DKIM. However, it won't be in alignment because it's not your signature. &lt;/p&gt;
+&lt;h2&gt;A passing grade is not good enough&lt;/h2&gt;
+&lt;p&gt;This illustrates why getting a passing grade on SPF and/or DKIM is not enough —one of them has to be in alignment. Without alignment, your customer's email provider can't verify you are who you say you are. And if they refuse to deliver unauthenticated messages, like Google and Yahoo are, your message will never make it to your customer's mailbox.&lt;/p&gt;
+&lt;p&gt;DKIM alignment is the easier of the two protocols to implement. To implement DKIM alignment, check your Email Service Provider's documentation. Most ESPs have instructions that will walk you through the process of authenticating your domain and configuring DKIM. &lt;/p&gt;</content><category term="articles"></category><category term="DMARC"></category></entry><entry><title>How to Configure Wildcard Subdomains and Virtual Mailboxes in Postfix</title><link href="https://jjriv.com/articles/postfix-wildcard-subdomains-virtual-mailboxes/" rel="alternate"></link><published>2024-05-28T00:00:00-07:00</published><updated>2024-05-28T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-05-28:/articles/postfix-wildcard-subdomains-virtual-mailboxes/</id><summary type="html">&lt;p&gt;A tutorial on how to configure Postfix mail server to receive messages addressed to any recipient and subdomain.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+
+&lt;p&gt;This tutorial teaches you how to configure a &lt;a href="https://www.postfix.org/"&gt;Postfix&lt;/a&gt; mail server to receive messages addressed to any recipient and subdomain at your domain. &lt;/p&gt;
+&lt;p&gt;A common use case for this configuration is a web-based software that receives emails intended for its users. For example, the mail server would accept delivery for messages sent to hello@jane.doe.com and hi@john.doe.com. The messages are then stored by Postfix in a single mailbox for further processing. &lt;/p&gt;
+&lt;p&gt;Let's get started.&lt;/p&gt;
+&lt;h3&gt;Step 1: Configure DNS&lt;/h3&gt;
+&lt;p&gt;DNS takes a while to propagate, so set this up first. We need to create A and MX records for your domain. You will need to know the IP address of your mail server. It should look like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nx"&gt;Record&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;A&lt;/span&gt;
+&lt;span class="nx"&gt;Name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;mx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;com&lt;/span&gt;
+&lt;span class="nx"&gt;TTL&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;300&lt;/span&gt;
+&lt;span class="nx"&gt;IP&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m m-Double"&gt;1.2.3.4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nx"&gt;Record&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;MX&lt;/span&gt;
+&lt;span class="nx"&gt;Name&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;com&lt;/span&gt;
+&lt;span class="nx"&gt;TTL&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;300&lt;/span&gt;
+&lt;span class="nx"&gt;Priority&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;
+&lt;span class="nx"&gt;Server&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nx"&gt;mx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;com&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;To test if the DNS updates for the these records have propagated to your servers, run the following commands:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;dig&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;A&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;mx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;QUESTION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;SECTION&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;;&lt;/span&gt;&lt;span class="nt"&gt;mx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="nt"&gt;IN&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nt"&gt;A&lt;/span&gt;
+
+&lt;span class="o"&gt;;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;ANSWER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;SECTION&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="nt"&gt;mx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;0&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;IN&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nt"&gt;A&lt;/span&gt;&lt;span class="w"&gt;       &lt;/span&gt;&lt;span class="nt"&gt;1&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;2&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;3&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;4&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;dig&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;MX&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;subdomain&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;
+&lt;span class="o"&gt;...&lt;/span&gt;
+&lt;span class="o"&gt;;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;QUESTION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;SECTION&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="o"&gt;;&lt;/span&gt;&lt;span class="nt"&gt;subdomain&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="nt"&gt;IN&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nt"&gt;MX&lt;/span&gt;
+
+&lt;span class="o"&gt;;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;ANSWER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;SECTION&lt;/span&gt;&lt;span class="o"&gt;:&lt;/span&gt;
+&lt;span class="nt"&gt;subdomain&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;0&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;IN&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nt"&gt;MX&lt;/span&gt;&lt;span class="w"&gt;      &lt;/span&gt;&lt;span class="nt"&gt;10&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;mx&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nc"&gt;com&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Create a user and group for sharing read and write access to the mailbox&lt;/h3&gt;
+&lt;p&gt;Postfix will store incoming emails in a single text-based mailbox file on the server. We need to create a user and group and assign them ownership of the file, so that both our Postfix server and web application can access the same mailbox. &lt;/p&gt;
+&lt;p&gt;First, create a group called vmail:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;groupadd -g 5000 vmail
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Second, we create a user belonging to the vmail group, with no login access and the mail directory as its home.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;useradd&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;g&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;span class="n"&gt;usermod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;d&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;span class="n"&gt;usermod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;sbin&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;nologin&lt;/span&gt;
+&lt;span class="n"&gt;usermod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;aG&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Third, we create the mailbox file, give ownership of it to our newly created vmail user, and set the permissions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;touch&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;span class="n"&gt;chown&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;span class="n"&gt;chmod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0660&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;When you are finished, you should see something like this in the &lt;code&gt;/var/mail&lt;/code&gt; directory:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;-rw-rw----  1 vmail vmail  556 Mar 13 13:03 vmail
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 3: Grant mailbox access to the cron user (optional)&lt;/h3&gt;
+&lt;p&gt;If your web application will be acessing the mailbox through a scheduled cron, you need to add the cron user to the vmail group, which will grant it read/write access. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;usermod -aG vmail cronuser
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Additionally, Linux distributions, such as Ubuntu, will block the cron user from accessing a virtual mailbox file outside of its home directory due to security restrictions. To resolve this we add a symbolic link in the cron user&amp;rsquo;s home directory:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;ln&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;mail&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;cronuser&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vmail&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 4: Configure Postfix to handle virtual subdomains&lt;/h3&gt;
+&lt;p&gt;The final step is to configure Postfix to accept email being sent to wildcard virtual subdomains. To accomplish this we use the virtual mailbox features of postfix and a few regular expressions to enable wildcards for our subdomains.&lt;/p&gt;
+&lt;p&gt;First, use your favorite text editor and create the virtual mailbox domains file &lt;code&gt;/etc/postfix/vdomains&lt;/code&gt;. This file contains the regular expression for matching the recipient&amp;rsquo;s email subdomain to a valid virtual domain.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;/((\w[\w\-]*)\.)+example\.com/ OK
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Second, create the virtual mailbox maps file &lt;code&gt;/etc/postfix/vmailbox&lt;/code&gt;. This file contains the regular expression needed to map the wildcard domain to our virtual mailbox.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;/@((\w[\w\-]*)\.)+example\.com/ vmail
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Third, run the following commands to update the Postfix configuration. These changes instruct Postfix to use the domains and maps files for parsing and delivering mail to our virtual mailbox file. They also establish ownership of our virtual mailbox file. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_mailbox_domains = pcre:/etc/postfix/vdomains&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_mailbox_base = /var/mail&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_mailbox_maps = pcre:/etc/postfix/vmailbox&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_minimum_uid = 5000&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_uid_maps = static:5000&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_gid_maps = static:5000&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_mailbox_limit = 0&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;postconf&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;virtual_mailbox_lock = fcntl&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;em&gt;Note: The virtual_mailbox_limit is set to zero here to denote that the mailbox filesize should not be restricted. You can set this value to whatever you would like.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Finally, create a lookup table file for the virtual domains and maps and then reload postfix:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;postmap&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vdomains&lt;/span&gt;
+&lt;span class="n"&gt;postmap&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;vmailbox&lt;/span&gt;
+&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;reload&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;That&amp;rsquo;s it! Emails should start arriving on the server, assuming DNS has propagated. It&amp;rsquo;s up to you what you do next. For web applications that utilize a scheduled cron look into the IMAP libraries available for the scripting language you are using.&lt;/p&gt;
+&lt;h3&gt;Resources&lt;/h3&gt;
+&lt;p&gt;I could not have figured any of this out without others having already done most of the work. Here is a list of articles, forum discussions, and general documentation that helped me out.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://www.postfix.org/VIRTUAL_README.html"&gt;Postfix Virtual Domain Hosting Howto&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.postfix.org/pcre_table.5.html"&gt;pcre_table – format of Postfix PCRE tables&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://www.c3.hu/docs/oreilly/tcpip/sendmail/ch21_03.htm#SML2-CH-21-SECT-3-4"&gt;DNS and sendmail: 21.3.4 Wildcard MX Records&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href="https://en.wikipedia.org/wiki/Wildcard_DNS_record"&gt;Wildcard Records&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Notes&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;If the mail server is behind a firewall, you will need to open up port 25 so that postfix can receive mail. &lt;/li&gt;
+&lt;li&gt;This post assumes you already have Postfix installed, secured, and sending emails.&lt;/li&gt;
+&lt;li&gt;We are using PCRE for the regular expression matching, which requires a replacment string. Since the vdomains file is only looking for a match, we can use any arbitrary replacement string. In our example, we simply use &amp;ldquo;OK.&amp;rdquo; An empty string works as well. If the replacement string is not specified, the pattern matching will still work, however, warnings will show up in the mail logs.&lt;/li&gt;
+&lt;li&gt;If you&amp;rsquo;d like to filter and reject certain incoming emails, the &lt;a href="https://www.postfix.org/header_checks.5.html"&gt;header_checks&lt;/a&gt; configuration parameter is a great place to start.&lt;/li&gt;
+&lt;/ol&gt;</content><category term="articles"></category><category term="Linux"></category><category term="postfix"></category></entry></feed>

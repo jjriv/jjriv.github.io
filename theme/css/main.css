@@ -1,0 +1,141 @@
+/* Imports */
+@import url("pico.grey.css");
+@import url("pico.colors.css");
+
+/* Global CSS variables */
+:root {
+    --pico-font-weight: 350;
+    font-family: "Noto Sans";
+}
+
+html {
+    min-height: 100vh;
+}
+
+body {
+    background-image: url("../images/opacity-fade.jpg");
+    background-size: 100%; 
+    background-color: #515151;
+    min-height: 100vh;
+
+}
+
+header.container-fluid {
+    background-color: var(--pico-color-grey-750);
+    padding-bottom: 0;
+    position: sticky; top: 0;
+    border-bottom: 17px solid var(--pico-color-amber-250);
+}
+
+header > nav > ul > li, header > nav > ul > li > a {
+    color: var(--pico-color-grey-300);
+}
+
+header > nav > ul > li > a:hover {
+    color: var(--pico-color-amber-300);
+}
+
+main.container {
+    padding-block: 0;
+}
+
+main div.mask {
+    background-color: #ffffffcc;
+    padding: 3em 1em;
+    margin-left: -1em;
+}
+
+h1 > a {
+    text-decoration: none;
+}
+
+main p {
+    color: var(--pico-color-grey-800)
+}
+
+@media (min-width: 768px) {
+    main div.mask {
+        margin-right: 25%;
+        /* width:150%; */
+    }
+}
+
+.entry-content p:not(.tags) > a, .entry-content li > a {
+    color: var(--pico-color-amber-400);
+    text-decoration-color: var(--pico-color-amber-400); 
+}
+
+.entry-content p:not(.tags) > a:hover, .entry-content li > a:hover {
+    color: var(--pico-color-amber-500);
+    text-decoration-color: var(--pico-color-amber-500); 
+}
+
+
+article {
+    border-radius: none;
+    background: none;
+    box-shadow: none;
+}
+
+article {
+    margin: 0;
+    padding: 0;
+}
+
+article, article > header, article > footer {
+    background-color: transparent;
+    border: none;
+}
+
+section.recent-articles {
+    padding-top: 2rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--pico-color-grey-300);
+}
+
+section.recent-articles > article, section.tagged-articles > article {
+    padding-top: 1rem;
+}
+
+section.recent-articles > article >  header, section.tagged-articles > article >  header {
+    margin: 0;
+    padding: 0;
+}
+
+section.articles > article {
+    padding-bottom: 1.5rem;  
+}
+
+section.articles > article > header {
+    margin-bottom: 0;
+}
+    
+
+section.articles > article > header > h3 {
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+footer:not(.post-info), footer:not(.post-info) a {
+    color: var(--pico-color-grey-400);
+}
+
+footer:not(.post-info) a:hover {
+    color: var(--pico-color-grey-200);
+    text-decoration-color: var(--pico-color-grey-200);
+}
+
+h1, h1 > a, h2, h3, h4, h5, h6 {
+    color: var(--pico-color-grey-700); 
+    font-family: "Noto Serif";
+}
+
+pre > code {
+    background-color: var(--pico-color-grey-800);
+    color: var(--pico-color-grey-200);
+}
+
+p > code, p > em > code, ol > li > code {
+    color: var(--pico-color-grey-700);
+    background-color: transparent;
+}

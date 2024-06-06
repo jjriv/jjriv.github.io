@@ -4,13 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content="Pelican" />
-    <title>full stack web development articles and tutorials | jjriv</title>
+    <title>A Simplified Explanation of DMARC</title>
+                <link rel="canonical" href="https://jjriv.com/articles/dmarc-simplified/">
     <link rel="stylesheet" href="https://jjriv.com/theme/css/main.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">    
     <link href="https://jjriv.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="jjriv Atom Feed" />
+        <meta name="description" content="To help understand how DMARC compliance works, and why SPF and/or DKIM alignment is necessary, I find that a postal service analogy works best." />
 </head>
 
 <body>
@@ -21,7 +23,7 @@
             </ul>
             <ul>
                     <li><a href="https://jjriv.com/about/" >about me</a></li>
-                    <li><a href="https://jjriv.com/articles/">articles</a></li>
+                    <li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
             <li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" /></svg></a></li>
             <li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></a></li>
             <li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M8 11l0 5" /><path d="M8 8l0 .01" /><path d="M12 16l0 -5" /><path d="M16 16v-3a2 2 0 0 0 -4 0" /></svg></a></li>
@@ -32,48 +34,42 @@
     <main class="container">
         <div class="grid">
             <div class="mask">
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://jjriv.com/articles/dmarc-simplified/" rel="bookmark"
+           title="Permalink to A Simplified Explanation of DMARC">A Simplified Explanation of DMARC</a></h1>
+    </header>
 
-<section>
-    <h1>Hello 👋</h1>
+    <div class="entry-content">
+      <h2>What is DMARC?</h2>
+<p>DMARC, which stands for <a href="https://dmarc.org/">Domain-based Message Authentication, Reporting &amp; Conformance</a>, is an email authentication protocol designed to give email senders the ability to prove ownership of their domain. </p>
+<p>To be DMARC compliant, an email sender must correctly implement at least one of two protocols — SPF (<a href="https://postmarkapp.com/guides/spf">Sender Policy Framework</a>) and DKIM (<a href="https://postmarkapp.com/guides/dkim">DomainKeys Identified Mail</a>). Now that we've gotten all the acronyms out of the way, let's move on to why DMARC is important. </p>
+<p>The simple truth is that email senders who are not DMARC compliant will find their emails <a href="https://meetmarigold.com/blogs/2024-guide-to-google-yahoos-new-privacy-protections/">blocked by Gmail and Yahoo</a>, and junked by many other mail providers. </p>
+<p>SPF and DKIM are two different methodologies, however, they have the same outcome. When implemented correctly they provide proof that your emails were sent by you, not an impostor. </p>
+<p>To help understand how they work, and why they are important, I find that a postal service analogy works best. Let's assume you want to mail a letter to one of your customers the old fashioned way, with an envelope and a stamp. Here's how SPF and DKIM would help ensure it gets delivered.</p>
+<h2>SPF</h2>
+<p>SPF provides a way for you to broadcast the address of your local post office to your customer, designating them as a safe deliverer. When you drop off the letter for delivery, the postal clerk stamps the envelope with their address. This allows your customer's mail person to verify your letter before putting it in their mailbox by comparing the stamped address on the envelope with the address you've made public. </p>
+<p>However, there is a loophole that a bad actor could easily exploit. Because you've broadcasted the address of your local post office, anyone can send a letter on your behalf simply by dropping it off at the same location. To prevent this from happening, your letter must also be authenticated by the post office using a method called SPF alignment.</p>
+<p>To authenticate your letter, the postal clerk first checks your identification. Once they've verified you as the rightful sender, they use a different stamp — one that still includes their address, but is unique to you. Before your customer's mail person drops off your letter they will now perform two checks. In addition to verifying that the stamped address matches the address you broadcasted, they will also make sure the stamp is the same unique one used by your local post office. </p>
+<p>With SPF alignment implemented correctly, the letter can't be sent by anyone other than you. </p>
+<h2>DKIM</h2>
+<p>DKIM is similar to SPF. But, instead of broadcasting the post office address, you broadcast a sample of your handwriting. When you drop off the letter for delivery, you sign the envelope with your signature. Your customer's mail deliverer then compares your signature to the publicly available handwriting sample, verifying that they are a match before delivering your letter. When your signature matches, the letter is considered to be DKIM aligned.</p>
+<p>If you drop off a letter without signing it, the postal clerk instead signs the envelope with her own signature that matches her broadcasted handwriting sample. Just like we saw with SPF, a bad actor could exploit this loophole by dropping off an unsigned letter at your local post office. Because the postal clerk's signature and handwriting sample are a match, the letter will pass DKIM. However, it won't be in alignment because it's not your signature. </p>
+<h2>A passing grade is not good enough</h2>
+<p>This illustrates why getting a passing grade on SPF and/or DKIM is not enough —one of them has to be in alignment. Without alignment, your customer's email provider can't verify you are who you say you are. And if they refuse to deliver unauthenticated messages, like Google and Yahoo are, your message will never make it to your customer's mailbox.</p>
+<p>DKIM alignment is the easier of the two protocols to implement. To implement DKIM alignment, check your Email Service Provider's documentation. Most ESPs have instructions that will walk you through the process of authenticating your domain and configuring DKIM. </p>
+<footer class="post-info">
+        <abbr class="published" title="2024-05-28T00:00:00-07:00">
+                Published: Tue 28 May 2024
+        </abbr>
 
-    <!--
-    <p>
-        I'm John, a professional web technology consultant. I'm here to help your company navigate the nuances of running a web site &mdash; to help you learn and succeed from my experience (including my mistakes.)
-    </p>
-    <p>
-        Please reach out to me at <a href="mailto:hello@jjriv.com" title="Email me">hello@jjriv.com</a>. I'm here to answer any questions you may have, free of charge. Meanwhile, please enjoy my <a href="/category/articles.html" title="Web technology articles and tutorials">articles and tutorials</a>.
-    </p>
+<p class="tags">Tags: <a href="https://jjriv.com/dmarc/">DMARC</a> </p>
+</footer><!-- /.post-info -->    </div><!-- /.entry-content -->
 
--->
-    <p>
-        I'm John. This site hosts a collection of <a href="/articles/" title="read my articles">articles and tutorials</a> based on my work in full stack web development. My areas of expertise include:
-    </p>
-    <ul>
-        <li>Linux operating systems</li>
-        <li>Apache and Nginx web servers</li>
-        <li>PostgreSQL databases</li>
-        <li>Python and PHP scripting languages</li>
-        <li>Email deliverability, including DMARC, SPF, and DKIM</li>
-
-    </ul>
+  </article>
 </section>
-
-<section class="recent-articles">
-    <h3>Recent articles</h3>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/ubuntu-simple-configuration-hardening/" rel="bookmark" title="Permalink to A Simple Guide to Configuring and Hardening Ubuntu Server">A Simple Guide to Configuring and Hardening Ubuntu Server</a></h4></header>
-            <section><p>This tutorial covers the bare minimum configuration and hardening you should apply to any new Ubuntu server.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/dmarc-simplified/" rel="bookmark" title="Permalink to A Simplified Explanation of DMARC">A Simplified Explanation of DMARC</a></h4></header>
-            <section><p>To help understand how DMARC compliance works, and why SPF and/or DKIM alignment is necessary, I find that a postal service analogy works best.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/postfix-wildcard-subdomains-virtual-mailboxes/" rel="bookmark" title="Permalink to How to Configure Wildcard Subdomains and Virtual Mailboxes in Postfix">How to Configure Wildcard Subdomains and Virtual Mailboxes in Postfix</a></h4></header>
-            <section><p>A tutorial on how to configure Postfix mail server to receive messages addressed to any recipient and subdomain.</p></section>
-    </article>
-</section>
-
             </div>
         </div>
     </main>
