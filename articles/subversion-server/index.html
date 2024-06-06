@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content="Pelican" />
+    <title>How to Configure and Deploy Subversion Server on Ubuntu</title>
+                <link rel="canonical" href="https://jjriv.com/articles/subversion-server/">
+    <link rel="stylesheet" href="https://jjriv.com/theme/css/main.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">    
+    <link href="https://jjriv.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="jjriv Atom Feed" />
+        <meta name="description" content="This tutorial shows you how to configure Apache to run as a Subversion server on the Ubuntu Linux operating system." />
+</head>
+
+<body>
+    <header class="container-fluid">
+        <nav class="container">
+            <ul>
+            <li><a href="/">jjriv</a></li>
+            </ul>
+            <ul>
+                    <li><a href="https://jjriv.com/about/" >about me</a></li>
+                    <li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
+            <li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" /></svg></a></li>
+            <li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4l11.733 16h4.267l-11.733 -16z" /><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772" /></svg></a></li>
+            <li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z" /><path d="M8 11l0 5" /><path d="M8 8l0 .01" /><path d="M12 16l0 -5" /><path d="M16 16v-3a2 2 0 0 0 -4 0" /></svg></a></li>
+            <li><a href="https://noc.social/@jjriv" target="_blank" title="mastodon"><svg  xmlns="http://www.w3.org/2000/svg"  width="24"  height="24"  viewBox="0 0 24 24"  fill="none"  stroke="currentColor"  stroke-width="2"  stroke-linecap="round"  stroke-linejoin="round"  class="icon icon-tabler icons-tabler-outline icon-tabler-brand-mastodon"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18.648 15.254c-1.816 1.763 -6.648 1.626 -6.648 1.626a18.262 18.262 0 0 1 -3.288 -.256c1.127 1.985 4.12 2.81 8.982 2.475c-1.945 2.013 -13.598 5.257 -13.668 -7.636l-.026 -1.154c0 -3.036 .023 -4.115 1.352 -5.633c1.671 -1.91 6.648 -1.666 6.648 -1.666s4.977 -.243 6.648 1.667c1.329 1.518 1.352 2.597 1.352 5.633s-.456 4.074 -1.352 4.944z" /><path d="M12 11.204v-2.926c0 -1.258 -.895 -2.278 -2 -2.278s-2 1.02 -2 2.278v4.722m4 -4.722c0 -1.258 .895 -2.278 2 -2.278s2 1.02 2 2.278v4.722" /></svg></a></li>
+            </ul>
+        </nav>
+    </header><!-- /#banner -->
+    <main class="container">
+        <div class="grid">
+            <div class="mask">
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://jjriv.com/articles/subversion-server/" rel="bookmark"
+           title="Permalink to How to Configure and Deploy Subversion Server on Ubuntu">How to Configure and Deploy Subversion Server on Ubuntu</a></h1>
+    </header>
+
+    <div class="entry-content">
+      <!-- Status: draft -->
+
+<p>Subversion is an open source version control system developed by Apache since the year 2000. Even though it&rsquo;s been largely overshadowed by Git, the <a href="https://subversion.apache.org/">Subversion software project</a> is still <a href="https://get.assembla.com/blog/apache-subversion-still-used/">widely used</a>. Subversion is an ideal choice for companies that have strict compliance and security standards. In other words, companies that want full control of their version control.   </p>
+<p>This tutorial teaches you how to install and configure Subversion server on the Ubuntu operating system.</p>
+<h3>Step 1: Install the Apache and Subversion packages</h3>
+<p>Run the following commands to install Apache and Subversion.</p>
+<div class="highlight"><pre><span></span><code>apt install apache2
+apt install subversion
+</code></pre></div>
+
+<h3>Step 2: Enable Apache DAV modules</h3>
+<p>The DAV modules are necessary to enable WebDAV, which is a set of extensions to the HTTP protocol which allow users to collaboratively edit and manage files on a web server. Use the apache <code>a2enmod</code> command to enable the dav modules</p>
+<div class="highlight"><pre><span></span><code>a2enmod dav
+a2enmod dav_fs
+a2enmod dav_svn
+</code></pre></div>
+
+<h3>Step 3: Configure the Subversion Virtual Host</h3>
+<p>Create the following file:<br>
+<code>/etc/apache2/sites-available/subversion.conf</code></p>
+<p>Add the following virtual host configuration:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;IfModule</span><span class="w"> </span><span class="err">mod_ssl.c</span><span class="nt">&gt;</span>
+<span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="err">*:443</span><span class="nt">&gt;</span>
+<span class="w">    </span>ServerName<span class="w"> </span>jjriv.com
+<span class="w">    </span>DocumentRoot<span class="w"> </span>/var/www/html
+<span class="w">    </span>KeepAlive<span class="w"> </span>On
+<span class="w">    </span>MaxKeepAliveRequests<span class="w">  </span>1000
+<span class="w">    </span>KeepAliveTimeout<span class="w"> </span>15
+<span class="w">    </span>CustomLog<span class="w"> </span>/var/log/apache2/svn_logfile<span class="w"> </span>&quot;%t<span class="w"> </span>%u<span class="w"> </span>%{SVN-ACTION}e&quot;<span class="w"> </span>env=SVN-ACTION
+<span class="nt">&lt;/VirtualHost&gt;</span>
+<span class="nt">&lt;/IfModule&gt;</span>
+<span class="nt">&lt;VirtualHost</span><span class="w"> </span><span class="err">*:80</span><span class="nt">&gt;</span>
+<span class="w">    </span>ServerName<span class="w"> </span>jjriv.com
+<span class="w">    </span>DocumentRoot<span class="w"> </span>/var/www/html
+<span class="nt">&lt;/VirtualHost&gt;</span>
+</code></pre></div>
+
+<h3>Step 4: Secure the Subversion Virtual Host</h3>
+<p>Since DAV access allows users to manipulate files on the server, you must assure that your server is secure. The virtual host should be protected by authentication. <a href="https://httpd.apache.org/docs/2.4/mod/mod_dav.html#security">HTTP Digest Authentication is the preferred method</a>. However, Basic Authentication is acceptable if the site is accessed over an SSL enabled connection.</p>
+<p>Add the following configuration to your config file:<br>
+<code>/etc/apache2/sites-available/subversion.conf</code></p>
+<div class="highlight"><pre><span></span><code><span class="nt">&lt;Location</span><span class="w"> </span><span class="err">/svn</span><span class="nt">&gt;</span>
+<span class="w">  </span>DAV<span class="w"> </span>svn
+<span class="w">  </span>SVNParentPath<span class="w"> </span>/var/svn
+
+<span class="w">  </span>#<span class="w"> </span>Authentication:<span class="w"> </span>Digest
+<span class="w">  </span>AuthName<span class="w"> </span>&quot;Subversion<span class="w"> </span>repository&quot;
+<span class="w">  </span>AuthType<span class="w"> </span>Digest
+<span class="w">  </span>AuthDigestProvider<span class="w"> </span>file
+<span class="w">  </span>AuthUserFile<span class="w"> </span>/etc/svn-auth.htdigest
+
+<span class="w">  </span>#<span class="w"> </span>Authorization:<span class="w"> </span>Authenticated<span class="w"> </span>users<span class="w"> </span>only
+<span class="w">  </span>Require<span class="w"> </span>valid-user
+<span class="nt">&lt;/Location&gt;</span>
+</code></pre></div>
+
+<p>The above configuration will read in a file containing usernames and encrypted passwords. That file can be created using the following command. The first time you run it, you need to use the <code>-c</code> option to instruct htdigest to create a new file:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>htdigest<span class="w"> </span>-c<span class="w"> </span>/etc/svn-auth.htdigest<span class="w"> </span><span class="s2">&quot;Subversion repository&quot;</span><span class="w"> </span>jjriv
+Adding<span class="w"> </span>password<span class="w"> </span><span class="k">for</span><span class="w"> </span>jjriv<span class="w"> </span><span class="k">in</span><span class="w"> </span>realm<span class="w"> </span>Subversion<span class="w"> </span>repository.
+New<span class="w"> </span>password:<span class="w"> </span>*****
+Re-type<span class="w"> </span>new<span class="w"> </span>password:<span class="w"> </span>*****
+</code></pre></div>
+
+<p>To add more users, run htdigest without the create option:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>htdigest<span class="w"> </span>/etc/svn-auth.htdigest<span class="w"> </span><span class="s2">&quot;Subversion repository&quot;</span><span class="w"> </span>john
+Adding<span class="w"> </span>user<span class="w"> </span>john<span class="w"> </span><span class="k">in</span><span class="w"> </span>realm<span class="w"> </span>Subversion<span class="w"> </span>repository
+New<span class="w"> </span>password:<span class="w"> </span>*******
+Re-type<span class="w"> </span>new<span class="w"> </span>password:<span class="w"> </span>*******
+</code></pre></div>
+
+<h3>Step 5: Configure the Firewall</h3>
+<p>Assuming you've secured your server already, you will need to open up ports for http and https. Run the following command to update the firewall using the UFW utility.</p>
+<div class="highlight"><pre><span></span><code>ufw allow http
+ufw allow http
+</code></pre></div>
+
+<h3>Step 6: Reload Apache</h3>
+<p>The next step is to load all of our configuration changes by reloading Apache:</p>
+<div class="highlight"><pre><span></span><code><span class="n">systemctl</span><span class="w"> </span><span class="n">reload</span><span class="w"> </span><span class="n">apache2</span>
+</code></pre></div>
+
+<h3>Step 7: Install SSL Certificate from Let&rsquo;s Encrypt</h3>
+<p>For the Subversion server to be secure it needs to have a SSL certificate installed and redirect all http traffic to https. Fortunately, <a href="https://certbot.eff.org">certbot</a> from <a href="https://letsencrypt.org/">Let&rsquo;s Encrypt</a> makes this really easy.</p>
+<p>First, <a href="https://certbot.eff.org/instructions?ws=apache&amp;os=ubuntufocal">install certbot using the Apache / Ubuntu instructions</a>.</p>
+<p>Next, run the following command and answer the prompts to create your certificate:</p>
+<div class="highlight"><pre><span></span><code>certbot --apache -d jjriv.com
+</code></pre></div>
+
+<p>This will install the certificate, configure the redirect, and restart Apache. You can use curl to verify that it completed successfully.</p>
+<p>To verify the http to https redirect:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span>-I<span class="w"> </span>http://jjriv.com
+HTTP/1.1<span class="w"> </span><span class="m">301</span><span class="w"> </span>Moved<span class="w"> </span>Permanently
+Date:<span class="w"> </span>Thu,<span class="w"> </span><span class="m">06</span><span class="w"> </span>Jun<span class="w"> </span><span class="m">2024</span><span class="w"> </span><span class="m">02</span>:51:52<span class="w"> </span>GMT
+Server:<span class="w"> </span>Apache
+Location:<span class="w"> </span>https://jjriv.com/
+...
+</code></pre></div>
+
+<p>To verify the certificate (this command will fail if the cert is not installed correctly):</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span>-I<span class="w"> </span>https://jjriv.com
+HTTP/1.1<span class="w"> </span><span class="m">401</span><span class="w"> </span>Unauthorized
+Date:<span class="w"> </span>Thu,<span class="w"> </span><span class="m">06</span><span class="w"> </span>Jun<span class="w"> </span><span class="m">2024</span><span class="w"> </span><span class="m">02</span>:52:38<span class="w"> </span>GMT
+Server:<span class="w"> </span>Apache
+...
+</code></pre></div>
+
+<p>Now, point your browser at your domain and log in using the credentials you created. If you&rsquo;re not sure what to do next, start by reading the <a href="https://svnbook.red-bean.com/en/1.7/svn.tour.importing.html">Getting Data into Your Repository</a> chapter of the Subversion book.</p>
+<footer class="post-info">
+        <abbr class="published" title="2024-05-05T00:00:00-07:00">
+                Published: Sun 05 May 2024
+        </abbr>
+
+<p class="tags">Tags: <a href="https://jjriv.com/linux/">Linux</a> <a href="https://jjriv.com/ubuntu/">Ubuntu</a> <a href="https://jjriv.com/version-control/">Version Control</a> <a href="https://jjriv.com/subversion/">Subversion</a> </p>
+</footer><!-- /.post-info -->    </div><!-- /.entry-content -->
+
+  </article>
+</section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="container">
+            jjriv.com is powered by <a href="https://getpelican.com/">Pelican</a> &amp; <a href="https://picocss.com/">Pico</a> 
+            <svg fill="none" height="17" viewBox="0 0 1020 960" xmlns="http://www.w3.org/2000/svg"><path d="m768.296 576.809c-5.281 2.031-9.455 6.205-11.487 11.487l-78.142 203.17c-6.575 17.094-30.759 17.094-37.334 0l-78.142-203.17c-2.032-5.282-6.206-9.456-11.487-11.487l-203.17-78.142c-17.094-6.575-17.094-30.76 0-37.334l203.17-78.142c5.281-2.032 9.455-6.206 11.487-11.487l78.142-203.17c6.575-17.094 30.759-17.094 37.334 0l78.142 203.17c2.032 5.281 6.206 9.455 11.487 11.487l203.17 78.142c17.094 6.575 17.094 30.759 0 37.334z" fill="#ffbf00"/><g fill="#ff9500"><path d="m198.667 311.466c-6.575 17.094-30.759 17.094-37.334 0l-28.142-73.17c-2.032-5.282-6.206-9.456-11.487-11.487l-73.1699-28.142c-17.0939-6.575-17.094-30.759-.0001-37.334l73.17-28.142c5.281-2.032 9.455-6.206 11.487-11.487l28.142-73.1701c6.575-17.0939 30.759-17.0938 37.334 0l28.142 73.1701c2.032 5.281 6.206 9.455 11.487 11.487l73.17 28.142c17.094 6.575 17.094 30.759 0 37.334l-73.17 28.142c-5.281 2.031-9.455 6.205-11.487 11.487z"/><path d="m358.296 826.809c-5.281 2.031-9.455 6.205-11.487 11.487l-28.142 73.17c-6.575 17.094-30.759 17.094-37.334 0l-28.142-73.17c-2.032-5.282-6.206-9.456-11.487-11.487l-73.17-28.142c-17.094-6.575-17.094-30.76 0-37.334l73.17-28.142c5.281-2.032 9.455-6.206 11.487-11.488l28.142-73.169c6.575-17.094 30.759-17.094 37.334 0l28.142 73.169c2.032 5.282 6.206 9.456 11.487 11.488l73.17 28.142c17.094 6.574 17.094 30.759 0 37.334z"/></g></svg>
+    </footer>
+
+</body>
+</html>

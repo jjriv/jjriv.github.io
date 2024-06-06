@@ -213,4 +213,110 @@ sudo apt upgrade
 &lt;li&gt;This post assumes you already have Postfix installed, secured, and sending emails.&lt;/li&gt;
 &lt;li&gt;We are using PCRE for the regular expression matching, which requires a replacment string. Since the vdomains file is only looking for a match, we can use any arbitrary replacement string. In our example, we simply use &amp;ldquo;OK.&amp;rdquo; An empty string works as well. If the replacement string is not specified, the pattern matching will still work, however, warnings will show up in the mail logs.&lt;/li&gt;
 &lt;li&gt;If you&amp;rsquo;d like to filter and reject certain incoming emails, the &lt;a href="https://www.postfix.org/header_checks.5.html"&gt;header_checks&lt;/a&gt; configuration parameter is a great place to start.&lt;/li&gt;
-&lt;/ol&gt;</content><category term="articles"></category><category term="Linux"></category><category term="postfix"></category></entry></feed>
+&lt;/ol&gt;</content><category term="articles"></category><category term="Linux"></category><category term="postfix"></category></entry><entry><title>How to Configure and Deploy Subversion Server on Ubuntu</title><link href="https://jjriv.com/articles/subversion-server/" rel="alternate"></link><published>2024-05-05T00:00:00-07:00</published><updated>2024-05-05T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-05-05:/articles/subversion-server/</id><summary type="html">&lt;p&gt;This tutorial shows you how to configure Apache to run as a Subversion server on the Ubuntu Linux operating system.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+
+&lt;p&gt;Subversion is an open source version control system developed by Apache since the year 2000. Even though it&amp;rsquo;s been largely overshadowed by Git, the &lt;a href="https://subversion.apache.org/"&gt;Subversion software project&lt;/a&gt; is still &lt;a href="https://get.assembla.com/blog/apache-subversion-still-used/"&gt;widely used&lt;/a&gt;. Subversion is an ideal choice for companies that have strict compliance and security standards. In other words, companies that want full control of their version control.   &lt;/p&gt;
+&lt;p&gt;This tutorial teaches you how to install and configure Subversion server on the Ubuntu operating system.&lt;/p&gt;
+&lt;h3&gt;Step 1: Install the Apache and Subversion packages&lt;/h3&gt;
+&lt;p&gt;Run the following commands to install Apache and Subversion.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt install apache2
+apt install subversion
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Enable Apache DAV modules&lt;/h3&gt;
+&lt;p&gt;The DAV modules are necessary to enable WebDAV, which is a set of extensions to the HTTP protocol which allow users to collaboratively edit and manage files on a web server. Use the apache &lt;code&gt;a2enmod&lt;/code&gt; command to enable the dav modules&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;a2enmod dav
+a2enmod dav_fs
+a2enmod dav_svn
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 3: Configure the Subversion Virtual Host&lt;/h3&gt;
+&lt;p&gt;Create the following file:&lt;br&gt;
+&lt;code&gt;/etc/apache2/sites-available/subversion.conf&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Add the following virtual host configuration:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;IfModule&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;mod_ssl.c&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;VirtualHost&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;*:443&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;ServerName&lt;span class="w"&gt; &lt;/span&gt;jjriv.com
+&lt;span class="w"&gt;    &lt;/span&gt;DocumentRoot&lt;span class="w"&gt; &lt;/span&gt;/var/www/html
+&lt;span class="w"&gt;    &lt;/span&gt;KeepAlive&lt;span class="w"&gt; &lt;/span&gt;On
+&lt;span class="w"&gt;    &lt;/span&gt;MaxKeepAliveRequests&lt;span class="w"&gt;  &lt;/span&gt;1000
+&lt;span class="w"&gt;    &lt;/span&gt;KeepAliveTimeout&lt;span class="w"&gt; &lt;/span&gt;15
+&lt;span class="w"&gt;    &lt;/span&gt;CustomLog&lt;span class="w"&gt; &lt;/span&gt;/var/log/apache2/svn_logfile&lt;span class="w"&gt; &lt;/span&gt;&amp;quot;%t&lt;span class="w"&gt; &lt;/span&gt;%u&lt;span class="w"&gt; &lt;/span&gt;%{SVN-ACTION}e&amp;quot;&lt;span class="w"&gt; &lt;/span&gt;env=SVN-ACTION
+&lt;span class="nt"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;/IfModule&amp;gt;&lt;/span&gt;
+&lt;span class="nt"&gt;&amp;lt;VirtualHost&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;*:80&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;ServerName&lt;span class="w"&gt; &lt;/span&gt;jjriv.com
+&lt;span class="w"&gt;    &lt;/span&gt;DocumentRoot&lt;span class="w"&gt; &lt;/span&gt;/var/www/html
+&lt;span class="nt"&gt;&amp;lt;/VirtualHost&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 4: Secure the Subversion Virtual Host&lt;/h3&gt;
+&lt;p&gt;Since DAV access allows users to manipulate files on the server, you must assure that your server is secure. The virtual host should be protected by authentication. &lt;a href="https://httpd.apache.org/docs/2.4/mod/mod_dav.html#security"&gt;HTTP Digest Authentication is the preferred method&lt;/a&gt;. However, Basic Authentication is acceptable if the site is accessed over an SSL enabled connection.&lt;/p&gt;
+&lt;p&gt;Add the following configuration to your config file:&lt;br&gt;
+&lt;code&gt;/etc/apache2/sites-available/subversion.conf&lt;/code&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;&amp;lt;Location&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;/svn&lt;/span&gt;&lt;span class="nt"&gt;&amp;gt;&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;DAV&lt;span class="w"&gt; &lt;/span&gt;svn
+&lt;span class="w"&gt;  &lt;/span&gt;SVNParentPath&lt;span class="w"&gt; &lt;/span&gt;/var/svn
+
+&lt;span class="w"&gt;  &lt;/span&gt;#&lt;span class="w"&gt; &lt;/span&gt;Authentication:&lt;span class="w"&gt; &lt;/span&gt;Digest
+&lt;span class="w"&gt;  &lt;/span&gt;AuthName&lt;span class="w"&gt; &lt;/span&gt;&amp;quot;Subversion&lt;span class="w"&gt; &lt;/span&gt;repository&amp;quot;
+&lt;span class="w"&gt;  &lt;/span&gt;AuthType&lt;span class="w"&gt; &lt;/span&gt;Digest
+&lt;span class="w"&gt;  &lt;/span&gt;AuthDigestProvider&lt;span class="w"&gt; &lt;/span&gt;file
+&lt;span class="w"&gt;  &lt;/span&gt;AuthUserFile&lt;span class="w"&gt; &lt;/span&gt;/etc/svn-auth.htdigest
+
+&lt;span class="w"&gt;  &lt;/span&gt;#&lt;span class="w"&gt; &lt;/span&gt;Authorization:&lt;span class="w"&gt; &lt;/span&gt;Authenticated&lt;span class="w"&gt; &lt;/span&gt;users&lt;span class="w"&gt; &lt;/span&gt;only
+&lt;span class="w"&gt;  &lt;/span&gt;Require&lt;span class="w"&gt; &lt;/span&gt;valid-user
+&lt;span class="nt"&gt;&amp;lt;/Location&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The above configuration will read in a file containing usernames and encrypted passwords. That file can be created using the following command. The first time you run it, you need to use the &lt;code&gt;-c&lt;/code&gt; option to instruct htdigest to create a new file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;htdigest&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;/etc/svn-auth.htdigest&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Subversion repository&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;jjriv
+Adding&lt;span class="w"&gt; &lt;/span&gt;password&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;jjriv&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;realm&lt;span class="w"&gt; &lt;/span&gt;Subversion&lt;span class="w"&gt; &lt;/span&gt;repository.
+New&lt;span class="w"&gt; &lt;/span&gt;password:&lt;span class="w"&gt; &lt;/span&gt;*****
+Re-type&lt;span class="w"&gt; &lt;/span&gt;new&lt;span class="w"&gt; &lt;/span&gt;password:&lt;span class="w"&gt; &lt;/span&gt;*****
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;To add more users, run htdigest without the create option:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;htdigest&lt;span class="w"&gt; &lt;/span&gt;/etc/svn-auth.htdigest&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Subversion repository&amp;quot;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;john
+Adding&lt;span class="w"&gt; &lt;/span&gt;user&lt;span class="w"&gt; &lt;/span&gt;john&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;realm&lt;span class="w"&gt; &lt;/span&gt;Subversion&lt;span class="w"&gt; &lt;/span&gt;repository
+New&lt;span class="w"&gt; &lt;/span&gt;password:&lt;span class="w"&gt; &lt;/span&gt;*******
+Re-type&lt;span class="w"&gt; &lt;/span&gt;new&lt;span class="w"&gt; &lt;/span&gt;password:&lt;span class="w"&gt; &lt;/span&gt;*******
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 5: Configure the Firewall&lt;/h3&gt;
+&lt;p&gt;Assuming you've secured your server already, you will need to open up ports for http and https. Run the following command to update the firewall using the UFW utility.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ufw allow http
+ufw allow http
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 6: Reload Apache&lt;/h3&gt;
+&lt;p&gt;The next step is to load all of our configuration changes by reloading Apache:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;systemctl&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;reload&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;apache2&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 7: Install SSL Certificate from Let&amp;rsquo;s Encrypt&lt;/h3&gt;
+&lt;p&gt;For the Subversion server to be secure it needs to have a SSL certificate installed and redirect all http traffic to https. Fortunately, &lt;a href="https://certbot.eff.org"&gt;certbot&lt;/a&gt; from &lt;a href="https://letsencrypt.org/"&gt;Let&amp;rsquo;s Encrypt&lt;/a&gt; makes this really easy.&lt;/p&gt;
+&lt;p&gt;First, &lt;a href="https://certbot.eff.org/instructions?ws=apache&amp;amp;os=ubuntufocal"&gt;install certbot using the Apache / Ubuntu instructions&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Next, run the following command and answer the prompts to create your certificate:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;certbot --apache -d jjriv.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This will install the certificate, configure the redirect, and restart Apache. You can use curl to verify that it completed successfully.&lt;/p&gt;
+&lt;p&gt;To verify the http to https redirect:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;curl&lt;span class="w"&gt; &lt;/span&gt;-I&lt;span class="w"&gt; &lt;/span&gt;http://jjriv.com
+HTTP/1.1&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;301&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Moved&lt;span class="w"&gt; &lt;/span&gt;Permanently
+Date:&lt;span class="w"&gt; &lt;/span&gt;Thu,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;06&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Jun&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;2024&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;02&lt;/span&gt;:51:52&lt;span class="w"&gt; &lt;/span&gt;GMT
+Server:&lt;span class="w"&gt; &lt;/span&gt;Apache
+Location:&lt;span class="w"&gt; &lt;/span&gt;https://jjriv.com/
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;To verify the certificate (this command will fail if the cert is not installed correctly):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;curl&lt;span class="w"&gt; &lt;/span&gt;-I&lt;span class="w"&gt; &lt;/span&gt;https://jjriv.com
+HTTP/1.1&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;401&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Unauthorized
+Date:&lt;span class="w"&gt; &lt;/span&gt;Thu,&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;06&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;Jun&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;2024&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;02&lt;/span&gt;:52:38&lt;span class="w"&gt; &lt;/span&gt;GMT
+Server:&lt;span class="w"&gt; &lt;/span&gt;Apache
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now, point your browser at your domain and log in using the credentials you created. If you&amp;rsquo;re not sure what to do next, start by reading the &lt;a href="https://svnbook.red-bean.com/en/1.7/svn.tour.importing.html"&gt;Getting Data into Your Repository&lt;/a&gt; chapter of the Subversion book.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Ubuntu"></category><category term="Version Control"></category><category term="Subversion"></category></entry></feed>
