@@ -4,13 +4,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="generator" content="Pelican" />
-    <title>jjriv</title>
+    <title>Why Keeping DNS Records Current is Important</title>
+                <link rel="canonical" href="https://jjriv.com/articles/keep-dns-records-current-to-prevent-subdomain-attacks/">
     <link rel="stylesheet" href="https://jjriv.com/theme/css/main.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">    
     <link href="https://jjriv.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="jjriv Atom Feed" />
+        <meta name="description" content="Learn why keeping DNS records current is necessary to prevent attackers from taking over a subdomain." />
 </head>
 
 <body>
@@ -32,35 +34,44 @@
     <main class="container">
         <div class="grid">
             <div class="mask">
-<section class="articles">
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/keep-dns-records-current-to-prevent-subdomain-attacks/" rel="bookmark" title="Permalink to Why Keeping DNS Records Current is Important">Why Keeping DNS Records Current is Important</a></h3> </header>
-                <section><p>Learn why keeping DNS records current is necessary to prevent attackers from taking over a subdomain.</p></section>
-        </article>
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/python-sat-seat-availability/" rel="bookmark" title="Permalink to Using Python to Find an Available Seat for the SAT">Using Python to Find an Available Seat for the SAT</a></h3> </header>
-                <section><p>Trying to register for the SAT but there&rsquo;s no availability? Here&rsquo;s how to find a seat using Python.</p></section>
-        </article>
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/web-development-basic-linux/" rel="bookmark" title="Permalink to Linux Commands for Web Developers">Linux Commands for Web Developers</a></h3> </header>
-                <section><p>It is the responsibility of web developers to understand how their code is impacting the server environment. Here are a few essential commands to gauage your impact.</p></section>
-        </article>
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/ubuntu-simple-configuration-hardening/" rel="bookmark" title="Permalink to A Simple Guide to Configuring and Hardening Ubuntu Server">A Simple Guide to Configuring and Hardening Ubuntu Server</a></h3> </header>
-                <section><p>This tutorial covers the bare minimum configuration and hardening you should apply to any new Ubuntu server.</p></section>
-        </article>
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/dmarc-simplified/" rel="bookmark" title="Permalink to A Simplified Explanation of DMARC">A Simplified Explanation of DMARC</a></h3> </header>
-                <section><p>To help understand how DMARC compliance works, and why SPF and/or DKIM alignment is necessary, I find that a postal service analogy works best.</p></section>
-        </article>
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/postfix-wildcard-subdomains-virtual-mailboxes/" rel="bookmark" title="Permalink to How to Configure Wildcard Subdomains and Virtual Mailboxes in Postfix">How to Configure Wildcard Subdomains and Virtual Mailboxes in Postfix</a></h3> </header>
-                <section><p>A tutorial on how to configure Postfix mail server to receive messages addressed to any recipient and subdomain.</p></section>
-        </article>
-        <article>
-                <header> <h3><a href="https://jjriv.com/articles/subversion-server/" rel="bookmark" title="Permalink to How to Configure and Deploy Subversion Server on Ubuntu">How to Configure and Deploy Subversion Server on Ubuntu</a></h3> </header>
-                <section><p>This tutorial shows you how to configure Apache to run as a Subversion server on the Ubuntu Linux operating system.</p></section>
-        </article>
+<section id="content" class="body">
+  <article>
+    <header>
+      <h1 class="entry-title">
+        <a href="https://jjriv.com/articles/keep-dns-records-current-to-prevent-subdomain-attacks/" rel="bookmark"
+           title="Permalink to Why Keeping DNS Records Current is Important">Why Keeping DNS Records Current is Important</a></h1>
+    </header>
+
+    <div class="entry-content">
+      <!-- Status: draft -->
+
+<p>Managing DNS records can be a slow and cumbersome process. Most often, you&rsquo;re stuck maintaining them using the web interface provided by the DNS vendor. The more domains and DNS records you manage, the higher the probability that one or more entries will be neglected. Here&rsquo;s why it&rsquo;s important to keep your DNS records current and prevent a subdomain takeover attack. </p>
+<h2>What is Subdomain Takeover Attack?</h2>
+<p>A DNS record becomes stale when the resource it points to is no longer under your control. The A record is the most common type of these "dangling" DNS misconfigurations found in the wild. DNS A records that point to an IP address belonging to a hosting service with a high turnover rate, such as Digital Ocean or Linode, are much more susceptible to a <a href="https://blog.apnic.net/2019/01/09/be-careful-where-you-point-to-the-dangers-of-stale-dns-records/">subdomain takeover attack</a>. </p>
+<p>For example, you may have set up a test copy of your web site using the subdomain test.example.com and created a DNS A record pointed at a Linode VM. But, you forgot to delete the DNS record after completing your test and destroying the VM. </p>
+<p>The hosting company is going to reallocate that IP address to another resource in the near future. If the new owner of the IP address has ill intentions, your domain&rsquo;s reputation is in danger.</p>
+<h2>How is a stale DNS record discovered?</h2>
+<p>To exploit a stale DNS record, the attacker has to do a bit of fishing. The first step is to create a virtual machine, which will be allocated an IP address. </p>
+<p>The second step is to set up a web server and monitor web traffic. A basic out-of-the-box web site configuration is all that is needed. Because the attacker doesn&rsquo;t care what web page is served up. They only care about what shows up in the logs. </p>
+<p>Once the VM and web server are up and running, they simply monitor the logs and wait for something to pop up. All it takes is one request &mdash; from a bot, a probe, or a random google search &mdash; for the attacker to discover the subdomain pointed at their IP address.</p>
+<p>With VMs costing as little as $5 per month, it&rsquo;s quite easy for an attacker to spin up several VMs and leave them monitoring multiple IP addresses for a few days. If the web server logs don't show any hits after a few days, they simply destroy the VM, create a new one, and move on to another IP. </p>
+<h2>How is a stale DNS record exploited?</h2>
+<p>Now that the attacker has access to a web server receiving traffic directed at one of your subdomains, they can set up their own web site that piggybacks on the reputation of your domain. The first thing they will do is create a free SSL certificate using a service like <a href="https://letsencrypt.org/">Let&rsquo;s Encrypt</a>. This increases the legitimacy of whatever content they decide to host. </p>
+<p>Next, they&rsquo;ll upload the contents of the web site that will be masquerading under your subdomain. For example, they could create a form that mimics your web site to trick visitors into entering personal information. The unsuspecting visitors will have no idea the information they submit is being delivered to a nefarious third party.</p>
+<p>Another thing they could do is upload a slew of spammy content, verify the subdomain with google, and submit it for indexing. Anyone searching on google, will see the subdomain as being reputable and therefore more likely to click on the results that appear during their search. </p>
+<h2>How to keep DNS records from going stale</h2>
+<p>The solution is to regularly audit your DNS records and identify any subdomains that are no longer in use. Before you delete them, however, make sure the subdomain isn&rsquo;t already being exploited. If it is, it may be necessary to repoint the record to an IP you control to reclaim ownership of the subdomain. </p>
+<p>The final step is to delete any stale DNS records that you find during your audit. </p>
+<p>Another solution that helps is to enable Google Search Console for your domains and configure it to alert you if anyone claims authority over one of your subdomains.</p>
+<footer class="post-info">
+        <abbr class="published" title="2024-10-15T00:00:00-07:00">
+                Published: Tue 15 October 2024
+        </abbr>
+
+<p class="tags">Tags: <a href="https://jjriv.com/dns/">DNS</a> </p>
+</footer><!-- /.post-info -->    </div><!-- /.entry-content -->
+
+  </article>
 </section>
             </div>
         </div>
