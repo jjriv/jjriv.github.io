@@ -79,7 +79,91 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;That&amp;rsquo;s it!&lt;/h3&gt;
-&lt;p&gt;Your work is done. Sit back and relax. But don&amp;rsquo;t forget to check your inbox. &lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Python"></category></entry><entry><title>Linux Commands for Web Developers</title><link href="https://jjriv.com/articles/web-development-basic-linux/" rel="alternate"></link><published>2024-06-13T00:00:00-07:00</published><updated>2024-06-13T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-13:/articles/web-development-basic-linux/</id><summary type="html">&lt;p&gt;It is the responsibility of web developers to understand how their code is impacting the server environment. Here are a few essential commands to gauage your impact.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+&lt;p&gt;Your work is done. Sit back and relax. But don&amp;rsquo;t forget to check your inbox. &lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Python"></category></entry><entry><title>How to Configure DKIM with Postfix</title><link href="https://jjriv.com/articles/dkim-postfix-configuration/" rel="alternate"></link><published>2024-06-27T00:00:00-07:00</published><updated>2024-06-27T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-27:/articles/dkim-postfix-configuration/</id><summary type="html">&lt;p&gt;If you send email from a Postfix mail server, configuring DKIM is necessary to authenticate your domain. Without it, email providers like Gmail and Yahoo will junk or reject your emails. Here&amp;rsquo;s how to set it up.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+
+&lt;p&gt;If you send email from a Postfix mail server, configuring DKIM is one of two methods available to authenticate your domain (the other is SPF). Why is authenticating your domain important? Because, email providers like Gmail and Yahoo will junk or reject unauthenticated emails. Here&amp;rsquo;s how to set up DKIM in Ubuntu. &lt;/p&gt;
+&lt;h3&gt;What is DKIM?&lt;/h3&gt;
+&lt;p&gt;DKIM, or DomainKeys Identified Mail, is an email authentication method used to prove ownership of your domain. It works by embedding a digital signature in your outgoing emails which lets the receiver know that the message was sent and authorized by you. To verify the authenticity of the email, the embedded signature is checked against a public key published in your domain&amp;rsquo;s DNS records.&lt;/p&gt;
+&lt;h3&gt;Step 1: Install DKIM&lt;/h3&gt;
+&lt;p&gt;Use the apt package manager to install dkim.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;opendkim
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Update the opendkim configuration file&lt;/h3&gt;
+&lt;p&gt;Edit the &lt;code&gt;/etc/opendkim.conf&lt;/code&gt; file and change the following settings. The TrustedHosts, KeyTable, and SigningTable are explained later in this article. The Mode setting selects the operating mode. In this case, we set it to 's' for signer, as we are using opendkim to sign outgoing emails. The Socket setting specifies the socket that should be established by opendkim to receive connections from postfix. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;Mode&lt;/span&gt;&lt;span class="w"&gt;                  &lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;
+&lt;span class="n"&gt;InternalHosts&lt;/span&gt;&lt;span class="w"&gt;         &lt;/span&gt;&lt;span class="n"&gt;refile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;TrustedHosts&lt;/span&gt;
+&lt;span class="n"&gt;ExternalIgnoreList&lt;/span&gt;&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;refile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;TrustedHosts&lt;/span&gt;
+&lt;span class="n"&gt;KeyTable&lt;/span&gt;&lt;span class="w"&gt;              &lt;/span&gt;&lt;span class="n"&gt;refile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;KeyTable&lt;/span&gt;
+&lt;span class="n"&gt;SigningTable&lt;/span&gt;&lt;span class="w"&gt;          &lt;/span&gt;&lt;span class="n"&gt;refile&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;SigningTable&lt;/span&gt;
+&lt;span class="n"&gt;Socket&lt;/span&gt;&lt;span class="w"&gt;                &lt;/span&gt;&lt;span class="n"&gt;local&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;spool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sock&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 3: Create a TrustedHosts file&lt;/h3&gt;
+&lt;p&gt;Edit the &lt;code&gt;/etc/opendkim/TrustedHosts&lt;/code&gt; file and include the IP addresses of the hosts that are allowed to use the keys to sign emails. Assuming that the dkim service is running on the same host as postfix, only the localhost IP and hostname need to be included.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="mf"&gt;127.0.0.1&lt;/span&gt;
+&lt;span class="n"&gt;localhost&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 3: Generate a key&lt;/h3&gt;
+&lt;p&gt;In this step you need to generate a key and add it to DNS for verifying DKIM. First, create a directory where you will store your keys:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;mkdir /etc/opendkim/keys
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Second, create the keys using the &lt;code&gt;opendkim-genkey&lt;/code&gt; command. Enter your domain name after the domain (-d) parameter and the key name after the selector (-s) parameter. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;opendkim-genkey -d example.com -s mydkimkey
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The selector name entered above is what will be used to look up the key in your DNS record. The command we ran above will create the DNS record in &lt;code&gt;/etc/opendkim/keys/mydkimkey.txt&lt;/code&gt; and it should look something like below. Go ahead and create the DNS TEXT record for your domain.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;mydkimkey._domainkey  IN      TXT     ( &amp;quot;v=DKIM1; k=rsa; &amp;quot;
+          &amp;quot;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQK…&amp;quot; )
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 4: Create the KeyTable file&lt;/h3&gt;
+&lt;p&gt;The KeyTable file contains the selector/domain pair and the path to your private key. It tells opendkim where to find the correct keys for signing outgoing email. First, create the file and give it proper permissions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;touch /etc/opendkim/KeyTable
+chmod 0640 /etc/opendkim/KeyTable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then add the following line:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;mydkimkey._domainkey.example.com example.com:mydkimkey:/etc/opendkim/keys/mydkimkey.private
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 5: Create the SigningTable file&lt;/h3&gt;
+&lt;p&gt;The SigningTable file tells opendkim which selector to use for the declared domains and email addresses.   First, create the file and give it proper permissions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;touch /etc/opendkim/SigningTable
+chmod 0640 /etc/opendkim/SigningTable
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;We want to use the same selector for the entire domain, so we denote that by adding the following line:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="nv"&gt;@example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;mydkimkey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_domainkey&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;example&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 6: Create directory for socket and set up perms&lt;/h3&gt;
+&lt;p&gt;This step is necessary because postfix and opendkim need to communicate via unix sockets. Opendkim must be able to create the socket, and postfix must be able to read it. First, we add the user postfix to the opendkim group using the &lt;code&gt;usermod&lt;/code&gt; command. Then, we create the socket directory owned by the user opendkim and the group postfix. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;usermod&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;aG&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;
+&lt;span class="n"&gt;mkdir&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;spool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;
+&lt;span class="n"&gt;chown&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;var&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;spool&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;postfix&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;opendkim&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 7: Update postfix config with opendkim information&lt;/h3&gt;
+&lt;p&gt;In this step, we use the &lt;code&gt;postconf&lt;/code&gt; command to add configuration options, like below.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;postconf -e &amp;#39;smtpd_milters = local:opendkim/opendkim.sock&amp;#39;
+postconf -e &amp;#39;non_smtpd_milters = $smtpd_milters&amp;#39;
+postconf -e &amp;#39;milter_default_action = accept&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 8: Restart postfix and opendkim&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;restart&lt;span class="w"&gt; &lt;/span&gt;postfix
+$&lt;span class="w"&gt; &lt;/span&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;restart&lt;span class="w"&gt; &lt;/span&gt;opendkim
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Verify that it&amp;rsquo;s working&lt;/h3&gt;
+&lt;p&gt;There are two ways you can verify that your email is now signing outbound emails with a dkim signature. &lt;/p&gt;
+&lt;p&gt;The first way is to simply send yourself an email. Once you've received it, copy the headers and paste them into the &lt;a href="https://mxtoolbox.com/EmailHeaders.aspx"&gt;mxtoolbox&lt;/a&gt; utility to analyze them. This is the most thorough way to validate your opendkim setup, as it will validate that the emails are signed correctly by your mail server and authenticated correctly by the receiving mail server. &lt;/p&gt;
+&lt;p&gt;The second way is to check your mail logs. You should see the following:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Oct 20 00:01:02 myhost opendkim[695]: 4ABBCC1AFA: DKIM-Signature field added (s=mydkimkey, d=example.com)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Ubuntu"></category><category term="Postfix"></category></entry><entry><title>Linux Commands for Web Developers</title><link href="https://jjriv.com/articles/web-development-basic-linux/" rel="alternate"></link><published>2024-06-13T00:00:00-07:00</published><updated>2024-06-13T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-13:/articles/web-development-basic-linux/</id><summary type="html">&lt;p&gt;It is the responsibility of web developers to understand how their code is impacting the server environment. Here are a few essential commands to gauage your impact.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
 
 &lt;p&gt;Having worked in full stack web development and DevOps for over two decades, I&amp;rsquo;ve experienced my fair share of launches going pear shaped. The following is an overview of Linux commands that have become indispensable in troubleshooting and measuring a web application&amp;rsquo;s impact on its hosting environment.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Note: Most of these commands are installed by default with popular Linux distributions. However, you may have to install one or two of them.&lt;/em&gt;&lt;/p&gt;

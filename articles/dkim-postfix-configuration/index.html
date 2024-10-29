@@ -54,7 +54,7 @@
 </code></pre></div>
 
 <h3>Step 2: Update the opendkim configuration file</h3>
-<p>Edit the <code>/etc/opendkim.conf</code> file and change the following settings. For the <code>KeyFile</code> enter the </p>
+<p>Edit the <code>/etc/opendkim.conf</code> file and change the following settings. The TrustedHosts, KeyTable, and SigningTable are explained later in this article. The Mode setting selects the operating mode. In this case, we set it to 's' for signer, as we are using opendkim to sign outgoing emails. The Socket setting specifies the socket that should be established by opendkim to receive connections from postfix. </p>
 <div class="highlight"><pre><span></span><code><span class="n">Mode</span><span class="w">                  </span><span class="n">s</span>
 <span class="n">InternalHosts</span><span class="w">         </span><span class="n">refile</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">TrustedHosts</span>
 <span class="n">ExternalIgnoreList</span><span class="w">    </span><span class="n">refile</span><span class="p">:</span><span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">TrustedHosts</span>
@@ -63,84 +63,70 @@
 <span class="n">Socket</span><span class="w">                </span><span class="n">local</span><span class="p">:</span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">opendkim</span><span class="o">/</span><span class="n">opendkim</span><span class="o">.</span><span class="n">sock</span>
 </code></pre></div>
 
-<p>Since ps will produce one line per process, we can find out how many procs are running by piping the result through grep. If the number of processes is higher than expected, we know there&rsquo;s an issue.</p>
-<p>The second use case is finding out whether or not a specific process is running, and if so, how long it&rsquo;s been running. For example, let say we wanted to check in on a scheduled job running as a cron. </p>
-<p>Let&rsquo;s assume our web application has a component that sends email notifications. The command below will determine whether or not it&rsquo;s running, and if so, for how long. </p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>ps<span class="w"> </span>aux<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>mailer
-www-data<span class="w"> </span><span class="m">1468100</span><span class="w">  </span><span class="m">0</span>.0<span class="w">  </span><span class="m">0</span>.8<span class="w"> </span><span class="m">754888</span><span class="w">  </span><span class="m">8272</span><span class="w"> </span>?<span class="w">        </span>Sl<span class="w">   </span><span class="m">03</span>:59<span class="w">   </span><span class="m">0</span>:24<span class="w"> </span>/var/www/site/app/cron/mailer
+<h3>Step 3: Create a TrustedHosts file</h3>
+<p>Edit the <code>/etc/opendkim/TrustedHosts</code> file and include the IP addresses of the hosts that are allowed to use the keys to sign emails. Assuming that the dkim service is running on the same host as postfix, only the localhost IP and hostname need to be included.</p>
+<div class="highlight"><pre><span></span><code><span class="mf">127.0.0.1</span>
+<span class="n">localhost</span>
 </code></pre></div>
 
-<p>In the example above, the first timestamp <code>03:59</code> is the time the command was started. </p>
-<h3>vim</h3>
-<h5>Editing files directly on the server</h5>
-<p>While troubleshooting an issue it may become necessary to edit files on the production server. It&rsquo;s not advisable to do so, but, sometimes it is the only way to isolate an issue. The vim text editor enables us to edit files in production, and is similar to other editors such as emacs, nano, and vi. </p>
-<p>I recommend making a backup copy of the file before you edit it. Also, you will want to refer to a <a href="https://opensource.com/article/19/3/getting-started-vim">getting started guide</a> for a list of commands.</p>
-<p>To edit a file:</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>vim<span class="w"> </span>/var/www/site/app/config/mail.config
+<h3>Step 3: Generate a key</h3>
+<p>In this step you need to generate a key and add it to DNS for verifying DKIM. First, create a directory where you will store your keys:</p>
+<div class="highlight"><pre><span></span><code>mkdir /etc/opendkim/keys
 </code></pre></div>
 
-<h3>curl</h3>
-<h5>Web requests from the command line</h5>
-<p>The curl command is most useful for sending requests to the web application and analyzing the response. It can be used to analyze the contents of a web page to see how it&rsquo;s being rendered. More importantly, however, we can use it to look at the response headers.</p>
-<p>Here is an example of using curl to send a request to a web page to check that a redirect is working properly:</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>curl<span class="w"> </span>-I<span class="w"> </span>http://jjriv.com
-HTTP/1.1<span class="w"> </span><span class="m">301</span><span class="w"> </span>Moved<span class="w"> </span>Permanently
-Date:<span class="w"> </span>Fri,<span class="w"> </span><span class="m">14</span><span class="w"> </span>Jun<span class="w"> </span><span class="m">2024</span><span class="w"> </span><span class="m">02</span>:40:01<span class="w"> </span>GMT
-Content-Type:<span class="w"> </span>text/html
-Content-Length:<span class="w"> </span><span class="m">167</span>
-Connection:<span class="w"> </span>keep-alive
-Cache-Control:<span class="w"> </span>max-age<span class="o">=</span><span class="m">3600</span>
-Expires:<span class="w"> </span>Fri,<span class="w"> </span><span class="m">14</span><span class="w"> </span>Jun<span class="w"> </span><span class="m">2024</span><span class="w"> </span><span class="m">03</span>:40:01<span class="w"> </span>GMT
-Location:<span class="w"> </span>https://jjriv.com/
+<p>Second, create the keys using the <code>opendkim-genkey</code> command. Enter your domain name after the domain (-d) parameter and the key name after the selector (-s) parameter. </p>
+<div class="highlight"><pre><span></span><code>opendkim-genkey -d example.com -s mydkimkey
 </code></pre></div>
 
-<p>Notice that the response includes the 301 redirect header. The response also includes the Location header, which instructs the web browser where to redirect to.</p>
-<h3>iostat</h3>
-<h5>How is the web app impacting disk?</h5>
-<p>If your web application is connecting to a database you&rsquo;ll want to know how the SQL queries are affecting the database server. The <code>iostat</code> command will show us how much of the disk I/O is being utilized at that moment. Databases are bound by disk, meaning they can only perform as fast as they can access the data on the disk (until the cache kicks in). If the query is causing too much I/O on the database server&rsquo;s disks, it will need to be optimized. </p>
-<p>It&rsquo;s not uncommon for a database server to respond differently to queries in staging versus production. PostgreSQL, for example utilizes a query planner that adapts to the amount of data in the database. Just because a query performed well in staging does not mean it will perform the same in production.</p>
-<p>The following command will show I/O stats for all disks on the server, including the percentage of time each disk is busy (%util). The integer 1 tells the command to refresh every one second, so we can monitor the disk usage in real time. </p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>iostat<span class="w"> </span>-d<span class="w"> </span>-x
-Linux<span class="w"> </span><span class="m">5</span>.15.0-100-generic<span class="w"> </span><span class="o">(</span>w1sc.pelagodesign.com<span class="o">)</span><span class="w">        </span><span class="m">06</span>/17/2024<span class="w">      </span>_x86_64_<span class="w">        </span><span class="o">(</span><span class="m">1</span><span class="w"> </span>CPU<span class="o">)</span>
-
-Device<span class="w">            </span>r/s<span class="w">     </span>rkB/s<span class="w">   </span>rrqm/s<span class="w">  </span>%rrqm<span class="w"> </span>r_await<span class="w"> </span>rareq-sz<span class="w">     </span>w/s<span class="w">     </span>wkB/s<span class="w">   </span>wrqm/s<span class="w">  </span>%wrqm<span class="w"> </span>w_await<span class="w"> </span>wareq-sz<span class="w">     </span>d/s<span class="w">     </span>dkB/s<span class="w">   </span>drqm/s<span class="w">  </span>%drqm<span class="w"> </span>d_await<span class="w"> </span>dareq-sz<span class="w">     </span>f/s<span class="w"> </span>f_await<span class="w">  </span>aqu-sz<span class="w">  </span>%util
-sda<span class="w">              </span><span class="m">0</span>.24<span class="w">      </span><span class="m">6</span>.81<span class="w">     </span><span class="m">0</span>.06<span class="w">  </span><span class="m">19</span>.99<span class="w">    </span><span class="m">0</span>.39<span class="w">    </span><span class="m">27</span>.92<span class="w">    </span><span class="m">2</span>.70<span class="w">     </span><span class="m">21</span>.24<span class="w">     </span><span class="m">1</span>.07<span class="w">  </span><span class="m">28</span>.32<span class="w">    </span><span class="m">0</span>.54<span class="w">     </span><span class="m">7</span>.86<span class="w">    </span><span class="m">0</span>.02<span class="w">     </span><span class="m">15</span>.62<span class="w">     </span><span class="m">0</span>.00<span class="w">   </span><span class="m">0</span>.00<span class="w">    </span><span class="m">0</span>.02<span class="w">   </span><span class="m">920</span>.55<span class="w">    </span><span class="m">0</span>.40<span class="w">    </span><span class="m">0</span>.16<span class="w">    </span><span class="m">0</span>.00<span class="w">   </span><span class="m">0</span>.20
+<p>The selector name entered above is what will be used to look up the key in your DNS record. The command we ran above will create the DNS record in <code>/etc/opendkim/keys/mydkimkey.txt</code> and it should look something like below. Go ahead and create the DNS TEXT record for your domain.</p>
+<div class="highlight"><pre><span></span><code>mydkimkey._domainkey  IN      TXT     ( &quot;v=DKIM1; k=rsa; &quot;
+          &quot;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQK…&quot; )
 </code></pre></div>
 
-<p>The above command uses the <code>-d</code> option to show only disk activity (excludes CPU) and the <code>-x</code> option to include extended stats including <code>%util</code>. If the disk is slowing down the database utlization will be upwards of 100%. </p>
-<h3>grep</h3>
-<h5>Search log files for specific strings</h5>
-<p>If you have an idea of what you&rsquo;re looking for, grep can help you find it faster. The <code>grep</code> command takes a keyword and filename as it&rsquo;s arguments, and shows you the lines of the file where that keyword reside.</p>
-<p>The following example searches an apache log file for an IP address and shows us the lines in which it appears.</p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>grep<span class="w"> </span><span class="m">192</span>.168.3.7<span class="w"> </span>/var/log/apache2/access.log
-<span class="m">192</span>.168.3.7<span class="w"> </span>-<span class="w"> </span>-<span class="w"> </span><span class="o">[</span><span class="m">17</span>/Jun/2024:16:42:20<span class="w"> </span>-0700<span class="o">]</span><span class="w"> </span><span class="s2">&quot;GET / HTTP/1.1&quot;</span><span class="w"> </span><span class="m">200</span><span class="w"> </span><span class="m">34097</span><span class="w"> </span><span class="s2">&quot;https://jjriv.com/&quot;</span>
-<span class="s2">&quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36&quot;</span>
-<span class="m">192</span>.168.3.7<span class="w"> </span>-<span class="w"> </span>-<span class="w"> </span><span class="o">[</span><span class="m">17</span>/Jun/2024:12:48:18<span class="w"> </span>-0700<span class="o">]</span><span class="w"> </span><span class="s2">&quot;GET / HTTP/1.1&quot;</span><span class="w"> </span><span class="m">301</span><span class="w"> </span><span class="m">256</span><span class="w"> </span><span class="s2">&quot;-&quot;</span><span class="w"> </span><span class="s2">&quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15</span>
-<span class="s2">_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36&quot;</span>
+<h3>Step 4: Create the KeyTable file</h3>
+<p>The KeyTable file contains the selector/domain pair and the path to your private key. It tells opendkim where to find the correct keys for signing outgoing email. First, create the file and give it proper permissions:</p>
+<div class="highlight"><pre><span></span><code>touch /etc/opendkim/KeyTable
+chmod 0640 /etc/opendkim/KeyTable
 </code></pre></div>
 
-<h3>more, less, tail</h3>
-<h5>Sifting through haystacks</h5>
-<p>When a web application is not behaving as expected we can often find out why by looking at logs on the server. For example, web server logs can tell us if the code is triggering internal server errors or not. Looking at database logs can tell us which queries are taking too long or producing errors. The more, less, and tail commands are all useful for combing through log files. </p>
-<h6>more</h6>
-<p>The <code>more</code> command will display the contents of a file one page at a time. It&rsquo;s more rudimentary compared to the others but can be useful for quickly skimming files. A practical usage case is to combine it with the previously mentioned <code>grep</code> command, to paginate the results of a file search. </p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>grep<span class="w"> </span>proxy<span class="w"> </span>/var/log/apache2/error.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>more
+<p>Then add the following line:</p>
+<div class="highlight"><pre><span></span><code>mydkimkey._domainkey.example.com example.com:mydkimkey:/etc/opendkim/keys/mydkimkey.private
 </code></pre></div>
 
-<p>The example above searches the error log for any problems related to apache proxying requests to another server, such as FastCGI. </p>
-<h6>less</h6>
-<p>The <code>less</code> command is similar to <code>more</code>, however, it let&rsquo;s you search for keywords and scroll back through previous pages. It&rsquo;s a more interactive version of <code>more</code>. I guess you could say <code>less</code> is <code>more</code> 😁</p>
-<p>To go through a file one page at a time using <code>less</code>, run the following command. To search within the resutls, type <code>/</code> and then the keyword to search. Use the page down and page up keys to progress forward and backward. </p>
-<div class="highlight"><pre><span></span><code>$<span class="w"> </span>less<span class="w"> </span>/var/log/apache2/access.log
+<h3>Step 5: Create the SigningTable file</h3>
+<p>The SigningTable file tells opendkim which selector to use for the declared domains and email addresses.   First, create the file and give it proper permissions:</p>
+<div class="highlight"><pre><span></span><code>touch /etc/opendkim/SigningTable
+chmod 0640 /etc/opendkim/SigningTable
 </code></pre></div>
 
-<h6>tail</h6>
-<p>The <code>tail</code> command is most useful for viewing recent entries in a file, especially if you use the <code>-f</code> parameter to continuously tail a file. Here is an example:</p>
-<div class="highlight"><pre><span></span><code><span class="n">tail</span><span class="w"> </span><span class="o">-</span><span class="n">f</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="nb">log</span><span class="o">/</span><span class="n">apache2</span><span class="o">/</span><span class="n">access</span><span class="o">.</span><span class="n">log</span>
+<p>We want to use the same selector for the entire domain, so we denote that by adding the following line:</p>
+<div class="highlight"><pre><span></span><code><span class="o">*</span><span class="nv">@example</span><span class="p">.</span><span class="n">com</span><span class="w"> </span><span class="n">mydkimkey</span><span class="p">.</span><span class="n">_domainkey</span><span class="p">.</span><span class="n">example</span><span class="p">.</span><span class="n">com</span>
 </code></pre></div>
 
-<p>You can also combine it with grep to continuously monitor for error messages as they appear:</p>
-<div class="highlight"><pre><span></span><code><span class="n">tail</span><span class="w"> </span><span class="o">-</span><span class="n">f</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="nb">log</span><span class="o">/</span><span class="n">apache2</span><span class="o">/</span><span class="n">access</span><span class="o">.</span><span class="n">log</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="n">grep</span><span class="w"> </span><span class="n">ERROR</span>
+<h3>Step 6: Create directory for socket and set up perms</h3>
+<p>This step is necessary because postfix and opendkim need to communicate via unix sockets. Opendkim must be able to create the socket, and postfix must be able to read it. First, we add the user postfix to the opendkim group using the <code>usermod</code> command. Then, we create the socket directory owned by the user opendkim and the group postfix. </p>
+<div class="highlight"><pre><span></span><code><span class="n">usermod</span><span class="w"> </span><span class="o">-</span><span class="n">aG</span><span class="w"> </span><span class="n">opendkim</span><span class="w"> </span><span class="n">postfix</span>
+<span class="n">mkdir</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">opendkim</span>
+<span class="n">chown</span><span class="w"> </span><span class="n">opendkim</span><span class="p">:</span><span class="n">postfix</span><span class="w"> </span><span class="o">/</span><span class="k">var</span><span class="o">/</span><span class="n">spool</span><span class="o">/</span><span class="n">postfix</span><span class="o">/</span><span class="n">opendkim</span>
+</code></pre></div>
+
+<h3>Step 7: Update postfix config with opendkim information</h3>
+<p>In this step, we use the <code>postconf</code> command to add configuration options, like below.</p>
+<div class="highlight"><pre><span></span><code>postconf -e &#39;smtpd_milters = local:opendkim/opendkim.sock&#39;
+postconf -e &#39;non_smtpd_milters = $smtpd_milters&#39;
+postconf -e &#39;milter_default_action = accept&#39;
+</code></pre></div>
+
+<h3>Step 8: Restart postfix and opendkim</h3>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>postfix
+$<span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>opendkim
+</code></pre></div>
+
+<h3>Verify that it&rsquo;s working</h3>
+<p>There are two ways you can verify that your email is now signing outbound emails with a dkim signature. </p>
+<p>The first way is to simply send yourself an email. Once you've received it, copy the headers and paste them into the <a href="https://mxtoolbox.com/EmailHeaders.aspx">mxtoolbox</a> utility to analyze them. This is the most thorough way to validate your opendkim setup, as it will validate that the emails are signed correctly by your mail server and authenticated correctly by the receiving mail server. </p>
+<p>The second way is to check your mail logs. You should see the following:</p>
+<div class="highlight"><pre><span></span><code>Oct 20 00:01:02 myhost opendkim[695]: 4ABBCC1AFA: DKIM-Signature field added (s=mydkimkey, d=example.com)
 </code></pre></div>
 <footer class="post-info">
         <abbr class="published" title="2024-06-27T00:00:00-07:00">
