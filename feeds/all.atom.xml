@@ -79,13 +79,13 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;That&amp;rsquo;s it!&lt;/h3&gt;
-&lt;p&gt;Your work is done. Sit back and relax. But don&amp;rsquo;t forget to check your inbox. &lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Python"></category></entry><entry><title>How to Configure DKIM with Postfix</title><link href="https://jjriv.com/articles/dkim-postfix-configuration/" rel="alternate"></link><published>2024-06-27T00:00:00-07:00</published><updated>2024-06-27T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-27:/articles/dkim-postfix-configuration/</id><summary type="html">&lt;p&gt;If you send email from a Postfix mail server, configuring DKIM is necessary to authenticate your domain. Without it, email providers like Gmail and Yahoo will junk or reject your emails. Here&amp;rsquo;s how to set it up.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+&lt;p&gt;Your work is done. Sit back and relax. But don&amp;rsquo;t forget to check your inbox. &lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Python"></category></entry><entry><title>How to Configure OpenDKIM with Postfix</title><link href="https://jjriv.com/articles/opendkim-postfix-configuration/" rel="alternate"></link><published>2024-06-27T00:00:00-07:00</published><updated>2024-06-27T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-27:/articles/opendkim-postfix-configuration/</id><summary type="html">&lt;p&gt;If you send email from a Postfix mail server, configuring OpenDKIM is necessary to authenticate your domain. Without it, email providers like Gmail and Yahoo will junk or reject your emails. Here&amp;rsquo;s how to set it up.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
 
-&lt;p&gt;If you send email from a Postfix mail server, configuring DKIM is one of two methods available to authenticate your domain (the other is SPF). Why is authenticating your domain important? Because, email providers like Gmail and Yahoo will junk or reject unauthenticated emails. Here&amp;rsquo;s how to set up DKIM in Ubuntu. &lt;/p&gt;
+&lt;p&gt;If you send email from a Postfix mail server, configuring OpenDKIM is one of two methods available to authenticate your domain (the other is SPF). Why is authenticating your domain important? Because, email providers like Gmail and Yahoo will junk or reject unauthenticated emails. Here&amp;rsquo;s how to set up OpenDKIM in Ubuntu. &lt;/p&gt;
 &lt;h3&gt;What is DKIM?&lt;/h3&gt;
 &lt;p&gt;DKIM, or DomainKeys Identified Mail, is an email authentication method used to prove ownership of your domain. It works by embedding a digital signature in your outgoing emails which lets the receiver know that the message was sent and authorized by you. To verify the authenticity of the email, the embedded signature is checked against a public key published in your domain&amp;rsquo;s DNS records.&lt;/p&gt;
-&lt;h3&gt;Step 1: Install DKIM&lt;/h3&gt;
-&lt;p&gt;Use the apt package manager to install dkim.&lt;/p&gt;
+&lt;h3&gt;Step 1: Install OpenDKIM&lt;/h3&gt;
+&lt;p&gt;Use the apt package manager to install opendkim.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;opendkim
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
@@ -100,7 +100,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
 &lt;h3&gt;Step 3: Create a TrustedHosts file&lt;/h3&gt;
-&lt;p&gt;Edit the &lt;code&gt;/etc/opendkim/TrustedHosts&lt;/code&gt; file and include the IP addresses of the hosts that are allowed to use the keys to sign emails. Assuming that the dkim service is running on the same host as postfix, only the localhost IP and hostname need to be included.&lt;/p&gt;
+&lt;p&gt;Edit the &lt;code&gt;/etc/opendkim/TrustedHosts&lt;/code&gt; file and include the IP addresses of the hosts that are allowed to use the keys to sign emails. Assuming that the opendkim service is running on the same host as postfix, only the localhost IP and hostname need to be included.&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="mf"&gt;127.0.0.1&lt;/span&gt;
 &lt;span class="n"&gt;localhost&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
