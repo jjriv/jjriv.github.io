@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Pelican" name="generator"/>
+<title>Configuring Next.js with Nginx and PM2 for Production Deployment</title>
+<link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="canonical"/>
+<link href="https://jjriv.com/theme/css/main.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://jjriv.com/feeds/all.atom.xml" rel="alternate" title="jjriv Atom Feed" type="application/atom+xml">
+<meta content="A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and..." name="description"/>
+</link></link><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Articles", "item": "https://jjriv.com/articles"}, {"@type": "ListItem", "position": 3, "name": "Nextjs nginx pm2 howto", "item": "https://jjriv.com/articles/nextjs-nginx-pm2-howto"}, {"@type": "ListItem", "position": 4, "name": "Index", "item": "https://jjriv.com/articles/nextjs-nginx-pm2-howto/index.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jjriv"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "Configuring Next.js with Nginx and PM2 for Production Deployment", "about": "articles", "datePublished": "2026-03-09 00:00"}</script><meta content="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" property="og:url"/><meta content="article" property="og:type"/><meta content="Configuring Next.js with Nginx and PM2 for Production Deployment" property="og:title"/><meta content="en_US" property="og:locale"/></head>
+<body>
+<header class="container-fluid">
+<nav class="container">
+<ul>
+<li><a href="/">jjriv</a></li>
+</ul>
+<ul>
+<li><a href="https://jjriv.com/about/">about me</a></li>
+<li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
+<li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg></a></li>
+<li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg></a></li>
+<li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 11l0 5"></path><path d="M8 8l0 .01"></path><path d="M12 16l0 -5"></path><path d="M16 16v-3a2 2 0 0 0 -4 0"></path></svg></a></li>
+<li><a href="https://noc.social/@jjriv" target="_blank" title="mastodon"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-mastodon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M18.648 15.254c-1.816 1.763 -6.648 1.626 -6.648 1.626a18.262 18.262 0 0 1 -3.288 -.256c1.127 1.985 4.12 2.81 8.982 2.475c-1.945 2.013 -13.598 5.257 -13.668 -7.636l-.026 -1.154c0 -3.036 .023 -4.115 1.352 -5.633c1.671 -1.91 6.648 -1.666 6.648 -1.666s4.977 -.243 6.648 1.667c1.329 1.518 1.352 2.597 1.352 5.633s-.456 4.074 -1.352 4.944z"></path><path d="M12 11.204v-2.926c0 -1.258 -.895 -2.278 -2 -2.278s-2 1.02 -2 2.278v4.722m4 -4.722c0 -1.258 .895 -2.278 2 -2.278s2 1.02 2 2.278v4.722"></path></svg></a></li>
+</ul>
+</nav>
+</header><!-- /#banner -->
+<main class="container">
+<div class="grid">
+<div class="mask">
+<section class="body" id="content">
+<article>
+<header>
+<h1 class="entry-title">
+<a href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="bookmark" title="Permalink to Configuring Next.js with Nginx and PM2 for Production Deployment">Configuring Next.js with Nginx and PM2 for Production Deployment</a></h1>
+</header>
+<div class="entry-content">
+<p>Deploying a Next.js application to production requires more than just running <code>npm start</code>. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.</p>
+<h3>The Problem</h3>
+<p>Running a Node.js application directly on your server has several issues. Node.js doesn’t restart itself if it crashes. If you try to run multiple instances of your application on the same port, they’ll conflict. Static assets like JavaScript, CSS, and images should be served directly by a web server for better performance, not handled by your application server. These problems are solved by combining Nginx and PM2.</p>
+<p>Nginx acts as a reverse proxy sitting in front of your Next.js application. It serves static assets directly from disk, handles SSL/TLS termination, and forwards everything else to Node. PM2 manages your Node.js processes, keeps them running if they crash, enables clustering across CPU cores, and allows zero-downtime deployments.</p>
+<h3>Prerequisites</h3>
+<ul>
+<li>A Linux server (Ubuntu 20.04 or later recommended)</li>
+<li>Node.js 20+ and npm installed</li>
+<li>A built Next.js application ready for production</li>
+<li>Sudo or root access to the server</li>
+<li>A domain name pointing to your server (for SSL certificates)</li>
+</ul>
+<h3>Step 1: Install Node.js and PM2</h3>
+<p>First, ensure Node.js is installed on your server. Install PM2 globally:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>pm2
+</code></pre></div>
+<p>Verify the installation:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>--version
+</code></pre></div>
+<h3>Step 2: Prepare Your Next.js Application</h3>
+<p>Build your Next.js application for production:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>run<span class="w"> </span>build
+</code></pre></div>
+<p>This creates a <code>.next</code> directory containing the optimized build output. Copy your entire project to your server. For this guide, we’ll assume it’s located at <code>/var/www/nextjs-app</code>.</p>
+<h3>Step 3: Create a PM2 Ecosystem Configuration File</h3>
+<p>PM2 uses an ecosystem configuration file to define how your application should run. Create the file at <code>/var/www/nextjs-app/ecosystem.config.js</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">module</span><span class="p">.</span><span class="nx">exports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="nx">apps</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span>
+<span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">'nextjs-app'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">script</span><span class="o">:</span><span class="w"> </span><span class="s1">'npm'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">args</span><span class="o">:</span><span class="w"> </span><span class="s1">'start'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">cwd</span><span class="o">:</span><span class="w"> </span><span class="s1">'/var/www/nextjs-app'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">instances</span><span class="o">:</span><span class="w"> </span><span class="s1">'max'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">exec_mode</span><span class="o">:</span><span class="w"> </span><span class="s1">'cluster'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">env</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">NODE_ENV</span><span class="o">:</span><span class="w"> </span><span class="s1">'production'</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">PORT</span><span class="o">:</span><span class="w"> </span><span class="mf">3000</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">    </span><span class="nx">error_file</span><span class="o">:</span><span class="w"> </span><span class="s1">'/var/log/pm2/nextjs-app-error.log'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">out_file</span><span class="o">:</span><span class="w"> </span><span class="s1">'/var/log/pm2/nextjs-app-out.log'</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">log_date_format</span><span class="o">:</span><span class="w"> </span><span class="s1">'YYYY-MM-DD HH:mm:ss Z'</span>
+<span class="w">  </span><span class="p">}]</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Here’s what each setting does:</p>
+<ul>
+<li><strong>name</strong>: The name of your application for PM2 management</li>
+<li><strong>script</strong>: The command to run (<code>npm</code> in this case)</li>
+<li><strong>args</strong>: The arguments passed to npm (<code>start</code> runs <code>npm start</code>)</li>
+<li><strong>cwd</strong>: The working directory where PM2 should run the command</li>
+<li><strong>instances</strong>: Set to <code>max</code> to run one process per CPU core</li>
+<li><strong>exec_mode</strong>: Set to <code>cluster</code> so multiple instances share the same port via Node.js clustering</li>
+<li><strong>env</strong>: Environment variables available to your application</li>
+<li><strong>error_file</strong> and <strong>out_file</strong>: Log locations for debugging</li>
+<li><strong>log_date_format</strong>: Timestamp format for log entries</li>
+</ul>
+<h3>Step 4: Start Your Application with PM2</h3>
+<p>Start your application using the ecosystem file:</p>
+<div class="highlight"><pre><span></span><code><span class="nb">cd</span><span class="w"> </span>/var/www/nextjs-app
+pm2<span class="w"> </span>start<span class="w"> </span>ecosystem.config.js
+</code></pre></div>
+<p>Verify that your application is running:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>list
+</code></pre></div>
+<p>You should see your Next.js application running with multiple instances (one per CPU core). Check that it’s listening on port 3000:</p>
+<div class="highlight"><pre><span></span><code>netstat<span class="w"> </span>-tlnp<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="m">3000</span>
+</code></pre></div>
+<p>Save your PM2 configuration so it automatically restarts on server reboot:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>save
+pm2<span class="w"> </span>startup
+</code></pre></div>
+<p>The <code>pm2 startup</code> command will output a command you need to run with sudo. Copy and run it:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>env<span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$PATH</span>:/usr/bin<span class="w"> </span>/usr/local/lib/node_modules/pm2/bin/pm2<span class="w"> </span>startup<span class="w"> </span>systemd<span class="w"> </span>-u<span class="w"> </span>yourusername<span class="w"> </span>--hp<span class="w"> </span>/home/yourusername
+</code></pre></div>
+<h3>Step 5: Install and Configure Nginx</h3>
+<p>Install Nginx:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>nginx
+</code></pre></div>
+<p>Create a Nginx configuration file for your Next.js application at <code>/etc/nginx/sites-available/nextjs-app</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Next.js Application Server Configuration</span>
+<span class="k">server</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">server_name</span><span class="w"> </span><span class="s">yourdomain.com</span><span class="w"> </span><span class="s">www.yourdomain.com</span><span class="p">;</span>
+
+<span class="w">    </span><span class="c1"># Serve Next.js static assets directly with Nginx</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/_next/static/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">alias</span><span class="w"> </span><span class="s">/var/www/nextjs-app/.next/static/</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">1y</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">X-Served-By</span><span class="w"> </span><span class="s">"nginx"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1"># Serve public folder assets (favicon, images, etc.)</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="p">~</span><span class="sr">*</span><span class="w"> </span><span class="s">\.(ico|png|jpg|jpeg|gif|svg|webp|woff|woff2)</span>$<span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">root</span><span class="w"> </span><span class="s">/var/www/nextjs-app/public</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">expires</span><span class="w"> </span><span class="s">1y</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">Cache-Control</span><span class="w"> </span><span class="s">"public,</span><span class="w"> </span><span class="s">immutable"</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">add_header</span><span class="w"> </span><span class="s">X-Served-By</span><span class="w"> </span><span class="s">"nginx"</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1"># Everything else proxied to Next.js application</span>
+<span class="w">    </span><span class="kn">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://127.0.0.1:3000</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">        </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kn">listen</span><span class="w"> </span><span class="mi">80</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The key aspects of this configuration are:</p>
+<ul>
+<li><strong>Static assets (<code>/_next/static/</code>)</strong>: Served directly by Nginx with a one-year cache expiration. These files have content hashes in their names, so browsers will cache them indefinitely.</li>
+<li><strong>Public folder assets</strong>: Images, fonts, and favicons are served from your public directory with the same long-lived cache.</li>
+<li><strong>Everything else</strong>: Proxied to your Next.js application running on <code>127.0.0.1:3000</code>.</li>
+<li><strong>Proxy headers</strong>: Essential headers that tell your Node.js application about the original client and protocol.</li>
+</ul>
+<p>Enable the site:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>ln<span class="w"> </span>-s<span class="w"> </span>/etc/nginx/sites-available/nextjs-app<span class="w"> </span>/etc/nginx/sites-enabled/
+</code></pre></div>
+<p>Test the Nginx configuration:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>nginx<span class="w"> </span>-t
+</code></pre></div>
+<p>If there are no errors, restart Nginx:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>nginx
+</code></pre></div>
+<h3>Step 6: Configure SSL with Let’s Encrypt</h3>
+<p>Security requires HTTPS. Install Certbot and the Nginx plugin:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>certbot<span class="w"> </span>python3-certbot-nginx
+</code></pre></div>
+<p>Generate and install an SSL certificate:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>certbot<span class="w"> </span>--nginx<span class="w"> </span>-d<span class="w"> </span>yourdomain.com<span class="w"> </span>-d<span class="w"> </span>www.yourdomain.com
+</code></pre></div>
+<p>Follow the prompts to agree to the terms of service. Certbot will automatically modify your Nginx configuration to use SSL and redirect HTTP traffic to HTTPS. Verify the redirect works:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-I<span class="w"> </span>http://yourdomain.com
+</code></pre></div>
+<p>You should see a 301 redirect to HTTPS. Certbot also sets up automatic certificate renewal. Verify the renewal timer is active:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>status<span class="w"> </span>certbot.timer
+</code></pre></div>
+<h3>Step 7: Verify Your Deployment</h3>
+<p>Visit your domain in a browser. Your Next.js application should load successfully through Nginx. Check the browser console to verify static assets are being served by Nginx (look for the <code>X-Served-By: nginx</code> header).</p>
+<p>You can also verify headers with curl:</p>
+<div class="highlight"><pre><span></span><code>curl<span class="w"> </span>-I<span class="w"> </span>https://yourdomain.com/_next/static/somefile.js
+</code></pre></div>
+<p>The response should include <code>X-Served-By: nginx</code> and the long cache expiration headers.</p>
+<h3>Zero-Downtime Deployments</h3>
+<p>When you need to deploy a new version of your application, use PM2’s reload command to replace processes one at a time without downtime:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>reload<span class="w"> </span>ecosystem.config.js
+</code></pre></div>
+<p>This command gracefully shuts down one process at a time, starts a new one with fresh code, and waits for it to become healthy before moving to the next. Load balancing among the cluster continues during this time.</p>
+<p>For a full restart (needed in some cases):</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>restart<span class="w"> </span>ecosystem.config.js
+</code></pre></div>
+<p>Monitor your application during deployments:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>monit
+</code></pre></div>
+<h3>Monitoring and Maintenance</h3>
+<p>Check application status:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>status
+</code></pre></div>
+<p>View real-time logs:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>logs<span class="w"> </span>nextjs-app
+</code></pre></div>
+<p>View logs from a specific instance:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>logs<span class="w"> </span>nextjs-app<span class="w"> </span>--lines<span class="w"> </span><span class="m">100</span><span class="w"> </span>--stream
+</code></pre></div>
+<p>If your application crashes, PM2 automatically restarts it. Monitor for crashes:</p>
+<div class="highlight"><pre><span></span><code>pm2<span class="w"> </span>report
+</code></pre></div>
+<p>Nginx logs are located at <code>/var/log/nginx/access.log</code> and <code>/var/log/nginx/error.log</code>. Monitor them for issues:</p>
+<div class="highlight"><pre><span></span><code>tail<span class="w"> </span>-f<span class="w"> </span>/var/log/nginx/error.log
+</code></pre></div>
+<h3>Increasing Performance</h3>
+<p><strong>Gzip compression</strong>: Add this to your Nginx configuration inside the <code>server</code> block to compress responses:</p>
+<div class="highlight"><pre><span></span><code><span class="k">gzip</span><span class="w"> </span><span class="no">on</span><span class="p">;</span>
+<span class="k">gzip_types</span><span class="w"> </span><span class="s">text/plain</span><span class="w"> </span><span class="s">text/css</span><span class="w"> </span><span class="s">application/json</span><span class="w"> </span><span class="s">application/javascript</span><span class="w"> </span><span class="s">text/xml</span><span class="w"> </span><span class="s">application/xml</span><span class="w"> </span><span class="s">application/xml+rss</span><span class="w"> </span><span class="s">text/javascript</span><span class="p">;</span>
+<span class="k">gzip_min_length</span><span class="w"> </span><span class="mi">1000</span><span class="p">;</span>
+</code></pre></div>
+<p><strong>Increase file descriptor limits</strong>: Edit <code>/etc/security/limits.conf</code> and add:</p>
+<div class="highlight"><pre><span></span><code>www-data soft nofile 65535
+www-data hard nofile 65535
+</code></pre></div>
+<p>This allows Nginx to handle more concurrent connections.</p>
+<p><strong>Load balancing across multiple servers</strong>: If your application grows, modify the <code>proxy_pass</code> directive in your Nginx configuration to split traffic across multiple backend servers:</p>
+<div class="highlight"><pre><span></span><code><span class="k">upstream</span><span class="w"> </span><span class="s">nextjs_backend</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">3000</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">3001</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">server</span><span class="w"> </span><span class="n">127.0.0.1</span><span class="p">:</span><span class="mi">3002</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">location</span><span class="w"> </span><span class="s">/</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kn">proxy_pass</span><span class="w"> </span><span class="s">http://nextjs_backend</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">Host</span><span class="w"> </span><span class="nv">$host</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Real-IP</span><span class="w"> </span><span class="nv">$remote_addr</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-For</span><span class="w"> </span><span class="nv">$proxy_add_x_forwarded_for</span><span class="p">;</span>
+<span class="w">    </span><span class="kn">proxy_set_header</span><span class="w"> </span><span class="s">X-Forwarded-Proto</span><span class="w"> </span><span class="nv">$scheme</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3>Troubleshooting</h3>
+<p>If your application isn’t accessible:</p>
+<ol>
+<li>Check that PM2 is running your application: <code>pm2 list</code></li>
+<li>Check that Nginx is running: <code>sudo systemctl status nginx</code></li>
+<li>Verify Nginx configuration is valid: <code>sudo nginx -t</code></li>
+<li>Check Nginx error logs: <code>sudo tail -f /var/log/nginx/error.log</code></li>
+<li>Check your application logs: <code>pm2 logs nextjs-app</code></li>
+<li>Verify port 3000 is listening: <code>netstat -tlnp | grep 3000</code></li>
+<li>Verify Nginx is listening on port 80/443: <code>sudo netstat -tlnp | grep nginx</code></li>
+</ol>
+<p>If static assets return 404 errors, verify that the paths in your Nginx configuration match the actual file paths on your server.</p>
+<h3>Conclusion</h3>
+<p>You now have a production-ready deployment of your Next.js application with Nginx serving static content and PM2 managing your Node.js processes. This setup provides high availability, zero-downtime deployments, and efficient static asset delivery. As your application scales, you can expand this architecture by adding multiple backend servers and implementing advanced load balancing strategies.</p>
+<footer class="post-info">
+<abbr class="published" title="2026-03-09T00:00:00-07:00">
+                Published: Mon 09 March 2026
+        </abbr>
+<p class="tags">Tags: <a href="https://jjriv.com/nextjs/">Next.js</a> <a href="https://jjriv.com/nodejs/">Node.js</a> <a href="https://jjriv.com/nginx/">Nginx</a> <a href="https://jjriv.com/pm2/">PM2</a> <a href="https://jjriv.com/deployment/">Deployment</a> <a href="https://jjriv.com/linux/">Linux</a> </p>
+</footer><!-- /.post-info --> </div><!-- /.entry-content -->
+</article>
+</section>
+</div>
+</div>
+</main>
+<footer class="container">
+            jjriv.com is powered by <a href="https://getpelican.com/">Pelican</a> &amp; <a href="https://picocss.com/">Pico</a>
+<svg fill="none" height="17" viewbox="0 0 1020 960" xmlns="http://www.w3.org/2000/svg"><path d="m768.296 576.809c-5.281 2.031-9.455 6.205-11.487 11.487l-78.142 203.17c-6.575 17.094-30.759 17.094-37.334 0l-78.142-203.17c-2.032-5.282-6.206-9.456-11.487-11.487l-203.17-78.142c-17.094-6.575-17.094-30.76 0-37.334l203.17-78.142c5.281-2.032 9.455-6.206 11.487-11.487l78.142-203.17c6.575-17.094 30.759-17.094 37.334 0l78.142 203.17c2.032 5.281 6.206 9.455 11.487 11.487l203.17 78.142c17.094 6.575 17.094 30.759 0 37.334z" fill="#ffbf00"></path><g fill="#ff9500"><path d="m198.667 311.466c-6.575 17.094-30.759 17.094-37.334 0l-28.142-73.17c-2.032-5.282-6.206-9.456-11.487-11.487l-73.1699-28.142c-17.0939-6.575-17.094-30.759-.0001-37.334l73.17-28.142c5.281-2.032 9.455-6.206 11.487-11.487l28.142-73.1701c6.575-17.0939 30.759-17.0938 37.334 0l28.142 73.1701c2.032 5.281 6.206 9.455 11.487 11.487l73.17 28.142c17.094 6.575 17.094 30.759 0 37.334l-73.17 28.142c-5.281 2.031-9.455 6.205-11.487 11.487z"></path><path d="m358.296 826.809c-5.281 2.031-9.455 6.205-11.487 11.487l-28.142 73.17c-6.575 17.094-30.759 17.094-37.334 0l-28.142-73.17c-2.032-5.282-6.206-9.456-11.487-11.487l-73.17-28.142c-17.094-6.575-17.094-30.76 0-37.334l73.17-28.142c5.281-2.032 9.455-6.206 11.487-11.488l28.142-73.169c6.575-17.094 30.759-17.094 37.334 0l28.142 73.169c2.032 5.282 6.206 9.456 11.487 11.488l73.17 28.142c17.094 6.574 17.094 30.759 0 37.334z"></path></g></svg>
+</footer>
+</body>
+</html>
