@@ -1,130 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/all.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-09T00:00:00-07:00</updated><entry><title>How to Manually Create and Install Let's Encrypt SSL Certificates</title><link href="https://jjriv.com/articles/letsencrypt-manual-certificate-creation/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/letsencrypt-manual-certificate-creation/</id><summary type="html">&lt;p&gt;Learn how to manually create and install Let's Encrypt SSL certificates using DNS or HTTP validation when automated renewal isn't an option.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Most Let&amp;rsquo;s Encrypt tutorials focus on automated certificate renewal using certbot&amp;rsquo;s built-in web server or plugins. That works great if you have a simple setup with a single server running a standard web server. But what if your infrastructure is more complex? Maybe you&amp;rsquo;re running multiple servers behind a load balancer. Or you need a wildcard certificate that covers all subdomains. Or your application uses a non-standard port configuration that doesn&amp;rsquo;t play nicely with certbot&amp;rsquo;s automation.&lt;/p&gt;
-&lt;p&gt;In these situations, manual certificate creation gives you complete control. You generate the certificate using DNS or HTTP validation, then install it wherever you need it. This guide shows you how to create both wildcard and single-domain certificates manually using Let&amp;rsquo;s Encrypt.&lt;/p&gt;
-&lt;h3&gt;Prerequisites&lt;/h3&gt;
-&lt;ul&gt;
-&lt;li&gt;A Linux server with certbot installed&lt;/li&gt;
-&lt;li&gt;DNS access to create TXT records (for wildcard certificates)&lt;/li&gt;
-&lt;li&gt;SSH/root access to your web server&lt;/li&gt;
-&lt;li&gt;A domain pointing to your server&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Installing Certbot&lt;/h3&gt;
-&lt;p&gt;If certbot isn&amp;rsquo;t already installed on your server, install it using your package manager:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt&lt;span class="w"&gt; &lt;/span&gt;update
-apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;certbot
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;For other Linux distributions or installation methods, visit the &lt;a href="https://certbot.eff.org/instructions"&gt;official certbot instructions&lt;/a&gt;.&lt;/p&gt;
-&lt;h3&gt;Creating a Wildcard Certificate&lt;/h3&gt;
-&lt;p&gt;Wildcard certificates cover your main domain and all subdomains using a single certificate. For example, a wildcard cert for &lt;code&gt;*.example.net&lt;/code&gt; covers &lt;code&gt;www.example.net&lt;/code&gt;, &lt;code&gt;api.example.net&lt;/code&gt;, &lt;code&gt;mail.example.net&lt;/code&gt;, and any other subdomain you create.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Step 1: Run Certbot with DNS Validation&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Switch to root and run certbot with manual DNS challenge:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;root
-certbot&lt;span class="w"&gt; &lt;/span&gt;certonly&lt;span class="w"&gt; &lt;/span&gt;--manual&lt;span class="w"&gt; &lt;/span&gt;--preferred-challenges&lt;span class="o"&gt;=&lt;/span&gt;dns&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;example.net&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;*.example.net
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Here's what each option does:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;certonly&lt;/strong&gt;: Create a certificate without installing it&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;--manual&lt;/strong&gt;: Perform manual verification instead of automatic validation&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;--preferred-challenges=dns&lt;/strong&gt;: Use DNS validation (TXT records) for the challenge&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;-d example.net&lt;/strong&gt;: Add the root domain to the certificate&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;-d *.example.net&lt;/strong&gt;: Add a wildcard for all subdomains&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;Replace &lt;code&gt;example.net&lt;/code&gt; with your actual domain. The command requests a certificate that covers both the root domain and all subdomains.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Step 2: Create the DNS TXT Record&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Certbot will pause and display instructions for creating a DNS TXT record. The output looks like this:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Please deploy a DNS TXT record under the name:
-
-_acme-challenge.example.net
-
-with the following value:
-
-Kx9mP3nQ2rS8tU5vW7xY9zA1bC3dE4fG6hI8jK0lM2n
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Log into your DNS provider and create a new TXT record:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;Name&lt;/strong&gt;: &lt;code&gt;_acme-challenge.example.net&lt;/code&gt; (or just &lt;code&gt;_acme-challenge&lt;/code&gt; depending on your DNS interface)&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Type&lt;/strong&gt;: TXT&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;Value&lt;/strong&gt;: The string provided by certbot&lt;/li&gt;
-&lt;/ul&gt;
-&lt;p&gt;&lt;strong&gt;Step 3: Verify DNS Propagation&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Before pressing Enter to continue in certbot, verify the TXT record is visible. The best way is to query your DNS provider&amp;rsquo;s authoritative nameserver directly, which bypasses any DNS caching.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Option 1: Using dig (command line)&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;First, find your authoritative nameserver:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dig&lt;span class="w"&gt; &lt;/span&gt;+short&lt;span class="w"&gt; &lt;/span&gt;ns&lt;span class="w"&gt; &lt;/span&gt;example.net
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;This returns something like &lt;code&gt;ns1.dnshost.com&lt;/code&gt;. Then query that nameserver directly:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dig&lt;span class="w"&gt; &lt;/span&gt;@ns1.dnshost.com&lt;span class="w"&gt; &lt;/span&gt;TXT&lt;span class="w"&gt; &lt;/span&gt;_acme-challenge.example.net
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Look for the TXT record in the answer section. The value should match what certbot gave you:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c"&gt;;; ANSWER SECTION:&lt;/span&gt;
-_acme-challenge.example.net. 300 IN TXT &amp;quot;Kx9mP3nQ2rS8tU5vW7xY9zA1bC3dE4fG6hI8jK0lM2n&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Option 2: Using Google DNS Tool (web-based)&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;If &lt;code&gt;dig&lt;/code&gt; isn&amp;rsquo;t installed or you prefer a web interface, use the Google DNS tool:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;toolbox&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;googleapps&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;apps&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;dig&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="c1"&gt;#TXT/_acme-challenge.example.net&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Replace &lt;code&gt;example.net&lt;/code&gt; with your domain. Enter the DNS name in the query field and select TXT as the record type. This tool queries Google&amp;rsquo;s public DNS, so results may lag behind due to TTL caching, but it&amp;rsquo;s convenient for quick checks.&lt;/p&gt;
-&lt;p&gt;Once confirmed, return to the certbot prompt and press Enter to continue. Certbot will verify the DNS record and issue your certificate.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Step 4: Locate Your Certificates&lt;/strong&gt;&lt;/p&gt;
-&lt;p&gt;Certbot stores the generated certificates in &lt;code&gt;/etc/letsencrypt/live/yourdomain/&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls&lt;span class="w"&gt; &lt;/span&gt;-l&lt;span class="w"&gt; &lt;/span&gt;/etc/letsencrypt/live/example.net/
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;You&amp;rsquo;ll see four files:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;cert.pem&lt;/strong&gt;: Your domain certificate&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;chain.pem&lt;/strong&gt;: The Let&amp;rsquo;s Encrypt intermediate certificate&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;fullchain.pem&lt;/strong&gt;: Your certificate plus the chain (used by most web servers)&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;privkey.pem&lt;/strong&gt;: Your private key&lt;/li&gt;
-&lt;/ul&gt;
-&lt;h3&gt;Creating a Single-Domain Certificate&lt;/h3&gt;
-&lt;p&gt;For a single subdomain certificate without wildcard coverage, you can use HTTP validation instead of DNS. This is simpler because certbot can automatically place the validation file on your web server.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt;: If you&amp;rsquo;re behind a load balancer, make sure traffic is only being sent to the server where you&amp;rsquo;re running certbot. Otherwise, the validation request might get routed to a different backend server that doesn&amp;rsquo;t have the validation file.&lt;/p&gt;
-&lt;p&gt;Run certbot with HTTP validation:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;root
-certbot&lt;span class="w"&gt; &lt;/span&gt;certonly&lt;span class="w"&gt; &lt;/span&gt;--manual&lt;span class="w"&gt; &lt;/span&gt;--preferred-challenges&lt;span class="o"&gt;=&lt;/span&gt;http&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;app.example.net
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;Certbot will ask you to create a file at a specific URL on your web server. Follow the instructions, verify the file is accessible at the URL, then press Enter to continue.&lt;/p&gt;
-&lt;p&gt;Once issued, you can use the same process as the wildcard certificate to locate your certificate files in &lt;code&gt;/etc/letsencrypt/live/&lt;/code&gt;.&lt;/p&gt;
-&lt;h3&gt;Verify the Certificate&lt;/h3&gt;
-&lt;p&gt;After installation, verify your certificate is working correctly. You can use any of these methods:&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;SSL Labs&lt;/strong&gt;: Get a detailed security analysis of your certificate and SSL/TLS configuration:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;https://www.ssllabs.com/ssltest/analyze.html?d=example.net
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;sslscan&lt;/strong&gt;: Check certificate details and SSL/TLS configuration from the command line:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;sslscan
-sslscan&lt;span class="w"&gt; &lt;/span&gt;example.net
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;This scans your certificate and reports any issues with cipher suites, protocols, or certificate chain problems.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;OpenSSL command&lt;/strong&gt;: Check certificate expiration dates:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openssl&lt;span class="w"&gt; &lt;/span&gt;s_client&lt;span class="w"&gt; &lt;/span&gt;-connect&lt;span class="w"&gt; &lt;/span&gt;example.net:443&lt;span class="w"&gt; &lt;/span&gt;-servername&lt;span class="w"&gt; &lt;/span&gt;example.net&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;&lt;span class="w"&gt; &lt;/span&gt;/dev/null&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&amp;gt;/dev/null&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;openssl&lt;span class="w"&gt; &lt;/span&gt;x509&lt;span class="w"&gt; &lt;/span&gt;-noout&lt;span class="w"&gt; &lt;/span&gt;-dates
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Certbot&lt;/strong&gt;: List all certificates on the server:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;certbot&lt;span class="w"&gt; &lt;/span&gt;certificates
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Browser&lt;/strong&gt;: Visit your site via HTTPS and click the padlock icon to view certificate details.&lt;/p&gt;
-&lt;h3&gt;Renewal&lt;/h3&gt;
-&lt;p&gt;Let&amp;rsquo;s Encrypt certificates expire after 90 days. For manual certificates, you&amp;rsquo;ll need to repeat the creation process before expiration. Set a calendar reminder for 60 days from now to renew the certificate, which gives you a 30-day buffer.&lt;/p&gt;
-&lt;p&gt;If you need to renew an existing certificate, run the same certbot command you used initially. Certbot may skip the DNS verification step if the validation is still cached, but be prepared to update DNS records again if prompted.&lt;/p&gt;
-&lt;h3&gt;When to Use Manual vs. Automated&lt;/h3&gt;
-&lt;p&gt;Manual certificate creation is useful when:
-- You need a wildcard certificate covering all subdomains
-- Your infrastructure uses load balancers or non-standard configurations
-- You want to generate a certificate on one server and deploy it to multiple servers
-- Automated renewal isn&amp;rsquo;t working due to firewall or network restrictions&lt;/p&gt;
-&lt;p&gt;For simple single-server setups, automated renewal with certbot&amp;rsquo;s built-in renewal hooks is usually the better choice. But when your infrastructure demands more flexibility, manual creation gives you the control you need while still getting free SSL certificates from Let&amp;rsquo;s Encrypt.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="SSL"></category><category term="Security"></category></entry><entry><title>Configuring Next.js with Nginx and PM2 for Production Deployment</title><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/nextjs-nginx-pm2-howto/</id><summary type="html">&lt;p&gt;A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Deploying a Next.js application to production requires more than just running &lt;code&gt;npm start&lt;/code&gt;. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/all.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-09T00:00:00-07:00</updated><entry><title>Configuring Next.js with Nginx and PM2 for Production Deployment</title><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/nextjs-nginx-pm2-howto/</id><summary type="html">&lt;p&gt;A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Deploying a Next.js application to production requires more than just running &lt;code&gt;npm start&lt;/code&gt;. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.&lt;/p&gt;
 &lt;h3&gt;The Problem&lt;/h3&gt;
 &lt;p&gt;Running a Node.js application directly on your server has several issues. Node.js doesn&amp;rsquo;t restart itself if it crashes. If you try to run multiple instances of your application on the same port, they&amp;rsquo;ll conflict. Static assets like JavaScript, CSS, and images should be served directly by a web server for better performance, not handled by your application server. These problems are solved by combining Nginx and PM2.&lt;/p&gt;
 &lt;p&gt;Nginx acts as a reverse proxy sitting in front of your Next.js application. It serves static assets directly from disk, handles SSL/TLS termination, and forwards everything else to Node. PM2 manages your Node.js processes, keeps them running if they crash, enables clustering across CPU cores, and allows zero-downtime deployments.&lt;/p&gt;
@@ -366,78 +241,321 @@ www-data hard nofile 65535
 &lt;/ol&gt;
 &lt;p&gt;If static assets return 404 errors, verify that the paths in your Nginx configuration match the actual file paths on your server.&lt;/p&gt;
 &lt;h3&gt;Conclusion&lt;/h3&gt;
-&lt;p&gt;You now have a production-ready deployment of your Next.js application with Nginx serving static content and PM2 managing your Node.js processes. This setup provides high availability, zero-downtime deployments, and efficient static asset delivery. As your application scales, you can expand this architecture by adding multiple backend servers and implementing advanced load balancing strategies.&lt;/p&gt;</content><category term="articles"></category><category term="Next.js"></category><category term="Node.js"></category><category term="Nginx"></category><category term="PM2"></category><category term="Deployment"></category><category term="Linux"></category></entry><entry><title>How to Identify and Cancel Long-Running PostgreSQL Queries</title><link href="https://jjriv.com/articles/postgresql-cancel-long-running-queries/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/postgresql-cancel-long-running-queries/</id><summary type="html">&lt;p&gt;When a PostgreSQL query gets stuck or runs too long, it can consume database connections and cause your application to become unresponsive. Learn how to identify and terminate these queries before they bring down your system.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Database connections are a finite resource. When queries get stuck in an idle transaction or run longer than expected, they hold onto those connections. As more queries pile up waiting for the stuck ones to complete, your available connections get consumed. Once the connection limit is reached, your application can no longer communicate with the database and becomes unresponsive to users.&lt;/p&gt;
-&lt;p&gt;This situation can happen for several reasons. A poorly optimized query might take hours instead of seconds. A transaction might start but never commit, leaving it idle. A background job could fail partway through and hang indefinitely. Whatever the cause, you need to identify these problematic queries and terminate them before they exhaust your connection pool.&lt;/p&gt;
+&lt;p&gt;You now have a production-ready deployment of your Next.js application with Nginx serving static content and PM2 managing your Node.js processes. This setup provides high availability, zero-downtime deployments, and efficient static asset delivery. As your application scales, you can expand this architecture by adding multiple backend servers and implementing advanced load balancing strategies.&lt;/p&gt;</content><category term="articles"></category><category term="Next.js"></category><category term="Node.js"></category><category term="Nginx"></category><category term="PM2"></category><category term="Deployment"></category><category term="Linux"></category></entry><entry><title>Using Systemd Timers to Schedule Recurring System Jobs</title><link href="https://jjriv.com/articles/systemd-timers-schedule-jobs/" rel="alternate"></link><published>2026-02-14T00:00:00-08:00</published><updated>2026-02-14T00:00:00-08:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-02-14:/articles/systemd-timers-schedule-jobs/</id><summary type="html">&lt;p&gt;Learn how to use systemd timers to schedule recurring system jobs. Systemd timers provide better logging, prevent overlapping jobs, and integrate seamlessly with the rest of your infrastructure.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Most Linux administrators are familiar with cron for scheduling recurring jobs. Cron works great for simple user-level tasks. But when you're scheduling operating system-level services or long-running processes that need careful management, systemd timers are a better choice.&lt;/p&gt;
+&lt;p&gt;Systemd timers provide several advantages over cron that make them worth the extra setup:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Job overlap prevention&lt;/strong&gt;: Systemd timers guarantee that your scheduled job won't start if the previous instance is still running. Cron has no built-in protection against overlapping executions.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Better logging&lt;/strong&gt;: All timer executions are logged to the systemd journal with timestamps for when the job ran, how long it took, and what the exit status was. You get visibility that cron simply doesn't provide.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Manual invocation&lt;/strong&gt;: You can trigger the job on-demand without waiting for the schedule. For example, if you need an immediate backup before maintenance, you can run it instantly.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Integration with systemd dependencies&lt;/strong&gt;: You can configure timers to run after other systemd units, ensuring prerequisites are met. This isn't possible with cron.&lt;/p&gt;
+&lt;p&gt;This guide shows you how to create a systemd timer for a Python backup script that runs every night. The same approach works for any recurring system-level job.&lt;/p&gt;
 &lt;h3&gt;Prerequisites&lt;/h3&gt;
 &lt;ul&gt;
-&lt;li&gt;SSH access to your PostgreSQL database server&lt;/li&gt;
-&lt;li&gt;Sudo or PostgreSQL superuser privileges&lt;/li&gt;
-&lt;li&gt;PostgreSQL 14 or later (for &lt;code&gt;pg_stat_activity&lt;/code&gt; view)&lt;/li&gt;
+&lt;li&gt;Root or sudo access to your Linux server&lt;/li&gt;
+&lt;li&gt;A script or command you want to run on a schedule (executable)&lt;/li&gt;
+&lt;li&gt;Basic understanding of systemd units&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3&gt;Step 1: Connect to PostgreSQL&lt;/h3&gt;
-&lt;p&gt;SSH into your database server and switch to the postgres user:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;dbserver.example.com
-sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;postgres
-psql
+&lt;h3&gt;Step 1: Create Your Executable Script&lt;/h3&gt;
+&lt;p&gt;First, create the Python script that will be run by the timer. This example is a simple database backup script.&lt;/p&gt;
+&lt;p&gt;Create the script file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;vim&lt;span class="w"&gt; &lt;/span&gt;/usr/local/bin/backup-database.py
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;h3&gt;Step 2: Identify Long-Running and Stuck Queries&lt;/h3&gt;
-&lt;p&gt;Use the &lt;code&gt;pg_stat_activity&lt;/code&gt; view to see all active database connections and their current queries:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;pid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;usename&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;application_name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;client_addr&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;state&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;NOW&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;query_start&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;duration&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
-&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;query&lt;/span&gt;
-&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_stat_activity&lt;/span&gt;
-&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;state&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;idle&amp;#39;&lt;/span&gt;
-&lt;span class="k"&gt;ORDER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;BY&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;duration&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;DESC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;p&gt;Add the following content:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="ch"&gt;#!/usr/bin/env python3&lt;/span&gt;
+
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;subprocess&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;datetime&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;datetime&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;backup_database&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="sd"&gt;&amp;quot;&amp;quot;&amp;quot;Backup the PostgreSQL database to a timestamped file.&amp;quot;&amp;quot;&amp;quot;&lt;/span&gt;
+    &lt;span class="n"&gt;timestamp&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;datetime&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;now&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;strftime&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;%Y%m&lt;/span&gt;&lt;span class="si"&gt;%d&lt;/span&gt;&lt;span class="s2"&gt;_%H%M%S&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="n"&gt;backup_file&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/var/backups/database_&lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;timestamp&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;.sql.gz&amp;quot;&lt;/span&gt;
+
+    &lt;span class="k"&gt;try&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="c1"&gt;# Run pg_dump and compress the output&lt;/span&gt;
+        &lt;span class="n"&gt;result&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;subprocess&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;run&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;
+            &lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;pg_dump -U postgres myapp_db | gzip &amp;gt; &lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;backup_file&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="n"&gt;shell&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="n"&gt;check&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="n"&gt;capture_output&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+            &lt;span class="n"&gt;text&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="kc"&gt;True&lt;/span&gt;
+        &lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Backup completed successfully: &lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;backup_file&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;
+    &lt;span class="k"&gt;except&lt;/span&gt; &lt;span class="n"&gt;subprocess&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;CalledProcessError&lt;/span&gt; &lt;span class="k"&gt;as&lt;/span&gt; &lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+        &lt;span class="nb"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="sa"&gt;f&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Backup failed: &lt;/span&gt;&lt;span class="si"&gt;{&lt;/span&gt;&lt;span class="n"&gt;e&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;stderr&lt;/span&gt;&lt;span class="si"&gt;}&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;file&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;stderr&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+        &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="vm"&gt;__name__&lt;/span&gt; &lt;span class="o"&gt;==&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;__main__&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;backup_database&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;This query shows you all non-idle connections sorted by how long they&amp;rsquo;ve been running. The columns tell you:&lt;/p&gt;
+&lt;p&gt;Make the script executable:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;chmod&lt;span class="w"&gt; &lt;/span&gt;+x&lt;span class="w"&gt; &lt;/span&gt;/usr/local/bin/backup-database.py
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Test it manually to ensure it works:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;/usr/local/bin/backup-database.py
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Create the Systemd Service File&lt;/h3&gt;
+&lt;p&gt;The service file defines what command to execute when the timer triggers it.&lt;/p&gt;
+&lt;p&gt;Create the service file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;vim&lt;span class="w"&gt; &lt;/span&gt;/etc/systemd/system/backup-database.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Add the following content:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;span class="na"&gt;Description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;Backup the application database&lt;/span&gt;
+&lt;span class="na"&gt;After&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;network.target&lt;/span&gt;
+
+&lt;span class="k"&gt;[Service]&lt;/span&gt;
+&lt;span class="na"&gt;Type&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;oneshot&lt;/span&gt;
+&lt;span class="na"&gt;ExecStart&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;/usr/local/bin/backup-database.py&lt;/span&gt;
+&lt;span class="na"&gt;User&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;postgres&lt;/span&gt;
+&lt;span class="na"&gt;StandardOutput&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;journal&lt;/span&gt;
+&lt;span class="na"&gt;StandardError&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;journal&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Let's break down what each line does:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Description&lt;/strong&gt;: A human-readable description of what this service does.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;After=network.target&lt;/strong&gt;: Ensures the network is available before running (useful if you're backing up to a remote location).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Type=oneshot&lt;/strong&gt;: Tells systemd this service runs once and exits, rather than continuously. This is appropriate for scripts that complete their work and stop.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ExecStart&lt;/strong&gt;: The full path to the script or command to execute.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;User=postgres&lt;/strong&gt;: Run the script as the postgres user (adjust this to the appropriate user for your script).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;StandardOutput=journal&lt;/strong&gt; and &lt;strong&gt;StandardError=journal&lt;/strong&gt;: Send all script output to the systemd journal for logging.&lt;/p&gt;
+&lt;h3&gt;Step 3: Create the Systemd Timer File&lt;/h3&gt;
+&lt;p&gt;The timer file defines the schedule for when the service should run.&lt;/p&gt;
+&lt;p&gt;Create the timer file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;vim&lt;span class="w"&gt; &lt;/span&gt;/etc/systemd/system/backup-database.timer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Add the following content:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;[Unit]&lt;/span&gt;
+&lt;span class="na"&gt;Description&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;Run the database backup daily at 2 AM&lt;/span&gt;
+&lt;span class="na"&gt;Requires&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;backup-database.service&lt;/span&gt;
+
+&lt;span class="k"&gt;[Timer]&lt;/span&gt;
+&lt;span class="na"&gt;OnCalendar&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;daily&lt;/span&gt;
+&lt;span class="na"&gt;OnCalendar&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;*-*-* 02:00:00&lt;/span&gt;
+&lt;span class="na"&gt;Persistent&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;true&lt;/span&gt;
+
+&lt;span class="k"&gt;[Install]&lt;/span&gt;
+&lt;span class="na"&gt;WantedBy&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="s"&gt;timers.target&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Here's what each setting does:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Description&lt;/strong&gt;: Describes what this timer does.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Requires=backup-database.service&lt;/strong&gt;: Requires the backup-database.service to exist.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OnCalendar=daily&lt;/strong&gt;: Run daily. The second OnCalendar line specifies the exact time (2:00 AM).&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OnCalendar=&lt;em&gt;-&lt;/em&gt;-* 02:00:00&lt;/strong&gt;: Calendar format specifying year-month-day hour:minute:second. The &lt;code&gt;*&lt;/code&gt; means any value for that field. This runs every day at 2 AM.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Persistent=true&lt;/strong&gt;: If the system was shut down when the timer should have run, execute the job when the system boots back up.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;WantedBy=timers.target&lt;/strong&gt;: Makes this timer start on boot.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Common OnCalendar Formats:&lt;/strong&gt;&lt;/p&gt;
 &lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;pid&lt;/strong&gt;: The process ID you&amp;rsquo;ll use to cancel or terminate the query&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;usename&lt;/strong&gt;: The database user running the query&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;application_name&lt;/strong&gt;: The application or tool that initiated the connection&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;client_addr&lt;/strong&gt;: The IP address of the client machine&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;state&lt;/strong&gt;: The current state of the connection (active, idle in transaction, etc.)&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;duration&lt;/strong&gt;: How long the query has been running&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;query&lt;/strong&gt;: The actual SQL query being executed&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;daily&lt;/code&gt; - Every day at midnight&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;*-*-* 02:00:00&lt;/code&gt; - Every day at 2 AM&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Mon *-*-* 00:00:00&lt;/code&gt; - Every Monday at midnight&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;*-*-1 03:00:00&lt;/code&gt; - First day of every month at 3 AM&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;*-01-01 00:00:00&lt;/code&gt; - New Year's Day at midnight&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;hourly&lt;/code&gt; - Every hour on the hour&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;*-*-* 09,17:00:00&lt;/code&gt; - 9 AM and 5 PM every day&lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;Pay close attention to these warning signs:&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Queries stuck in idle transactions&lt;/strong&gt;: Look for &lt;code&gt;state = 'idle in transaction'&lt;/code&gt;. These connections started a transaction but never committed or rolled back. They may hold locks that block other queries.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Long-running queries&lt;/strong&gt;: Check the &lt;code&gt;duration&lt;/code&gt; column. If a query has been running for hours when it should take seconds or minutes, something is wrong.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Repeated identical queries&lt;/strong&gt;: Multiple instances of the same query with long durations might indicate a problem with your application code or a deadlock situation.&lt;/p&gt;
-&lt;h3&gt;Step 3: Cancel the Query&lt;/h3&gt;
-&lt;p&gt;Once you&amp;rsquo;ve identified a problematic query, first try to cancel it gracefully using &lt;code&gt;pg_cancel_backend()&lt;/code&gt;. Replace &lt;code&gt;&amp;lt;pid&amp;gt;&lt;/code&gt; with the process ID from Step 2:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_cancel_backend&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;12345&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;h3&gt;Step 4: Start and Enable the Timer&lt;/h3&gt;
+&lt;p&gt;Reload systemd to recognize the new service and timer files:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;daemon-reload
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;The &lt;code&gt;pg_cancel_backend()&lt;/code&gt; function sends a SIGINT signal to the backend process, which attempts to cancel the current query. The connection remains open and the client receives an error message indicating the query was canceled. This is the safer option because it allows the application to handle the cancellation and potentially retry.&lt;/p&gt;
-&lt;p&gt;If the function returns &lt;code&gt;true&lt;/code&gt;, the cancellation request was sent successfully. Run the query from Step 2 again to verify the process is gone.&lt;/p&gt;
-&lt;h3&gt;Step 4: Terminate the Connection (If Canceling Fails)&lt;/h3&gt;
-&lt;p&gt;If &lt;code&gt;pg_cancel_backend()&lt;/code&gt; doesn&amp;rsquo;t work—the process might be stuck in a state where it can&amp;rsquo;t respond to cancellation—you&amp;rsquo;ll need to forcefully terminate the entire connection:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_terminate_backend&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;12345&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;p&gt;Start the timer:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;start&lt;span class="w"&gt; &lt;/span&gt;backup-database.timer
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;The &lt;code&gt;pg_terminate_backend()&lt;/code&gt; function sends a SIGTERM signal that forcefully closes the connection. This immediately ends the backend process and rolls back any uncommitted transactions. The client will lose its connection to the database.&lt;/p&gt;
-&lt;p&gt;Use termination as a last resort because it&amp;rsquo;s more disruptive than cancellation. However, when a query is truly stuck and consuming resources, termination is necessary to free up the connection.&lt;/p&gt;
-&lt;h3&gt;Preventing the Problem&lt;/h3&gt;
-&lt;p&gt;While knowing how to terminate stuck queries is useful, preventing them in the first place is better. The first step is to audit your application and determine why queries are running longer than expected, then optimize those queries at the source. Timeouts and forced cancellation are guardrails, not a substitute for query tuning.&lt;/p&gt;
-&lt;p&gt;It&amp;rsquo;s also important to understand that these safeguards can have unintended consequences. If your timeout values are too aggressive, PostgreSQL may cancel legitimate queries before they finish, especially jobs you already know are expected to run longer.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Set statement timeouts&lt;/strong&gt;: Configure &lt;code&gt;statement_timeout&lt;/code&gt; in your PostgreSQL configuration to automatically cancel queries that run longer than a specified duration:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;ALTER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;DATABASE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;myapp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SET&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;statement_timeout&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;5min&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;p&gt;Enable the timer to persist after reboot:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;enable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;backup-database.timer
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;strong&gt;Set idle transaction timeouts&lt;/strong&gt;: Use &lt;code&gt;idle_in_transaction_session_timeout&lt;/code&gt; to automatically close connections stuck in idle transactions:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;ALTER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;DATABASE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;myapp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SET&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;idle_in_transaction_session_timeout&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;10min&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;p&gt;Verify the timer is running:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;status&lt;span class="w"&gt; &lt;/span&gt;backup-database.timer
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;&lt;strong&gt;Monitor connection usage&lt;/strong&gt;: Set up monitoring to alert you when your connection pool is getting close to the maximum. This gives you time to investigate before connections are exhausted.&lt;/p&gt;
-&lt;p&gt;&lt;strong&gt;Use connection pooling&lt;/strong&gt;: Tools like PgBouncer can help manage connections more efficiently and prevent runaway queries from consuming all available connections.&lt;/p&gt;
-&lt;p&gt;Identifying and terminating problematic queries is an essential skill for maintaining a healthy PostgreSQL database. With these tools, you can quickly diagnose connection issues and restore your application to normal operation before users are significantly impacted.&lt;/p&gt;</content><category term="articles"></category><category term="PostgreSQL"></category><category term="Linux"></category><category term="Database"></category></entry><entry><title>How to Set Up an SSH Jump Server for Secure Remote Access</title><link href="https://jjriv.com/articles/ssh-jump-server-setup/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/ssh-jump-server-setup/</id><summary type="html">&lt;p&gt;Learn how to configure an SSH jump server to add an extra layer of security to your production infrastructure by routing all SSH connections through a single hardened proxy.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Exposing SSH directly on your production servers creates a larger attack surface. Each server becomes a potential entry point for attackers attempting password spraying, brute force attacks, or exploiting SSH vulnerabilities. The more servers you have listening on port 22, the more targets you&amp;rsquo;re giving potential attackers.&lt;/p&gt;
+&lt;p&gt;You should see output similar to this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="err"&gt;●&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;backup&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;database&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;timer&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Run&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;database&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;backup&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;daily&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;at&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;AM&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;Loaded&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;loaded&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;systemd&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;system&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;backup&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;database&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;timer&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;enabled&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;vendor&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;preset&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;enabled&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="w"&gt;     &lt;/span&gt;&lt;span class="n"&gt;Active&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;active&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;waiting&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;since&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Mon&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2026&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;03&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;09&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;12&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;30&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;00&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UTC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="n"&gt;s&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;ago&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;Trigger&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;Tue&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;2026&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;03&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;02&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;00&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="mi"&gt;00&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;UTC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;13&lt;/span&gt;&lt;span class="n"&gt;h&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;left&lt;/span&gt;
+&lt;span class="w"&gt;  &lt;/span&gt;&lt;span class="n"&gt;Triggers&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;●&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;backup&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="n"&gt;database&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;service&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 5: Verify and Monitor&lt;/h3&gt;
+&lt;p&gt;List all active timers on your system:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;list-timers
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This shows all running timers, when they last ran, and when they'll run next.&lt;/p&gt;
+&lt;p&gt;To see the journal logs from your timer (useful for debugging):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;journalctl&lt;span class="w"&gt; &lt;/span&gt;-u&lt;span class="w"&gt; &lt;/span&gt;backup-database.service&lt;span class="w"&gt; &lt;/span&gt;-n&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;20&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This shows the last 20 entries from the backup service. Follow logs in real-time:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;journalctl&lt;span class="w"&gt; &lt;/span&gt;-u&lt;span class="w"&gt; &lt;/span&gt;backup-database.service&lt;span class="w"&gt; &lt;/span&gt;-f
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 6: Manually Trigger the Job&lt;/h3&gt;
+&lt;p&gt;You can run the backup job immediately without waiting for the scheduled time:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;start&lt;span class="w"&gt; &lt;/span&gt;backup-database.service
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This is useful for testing, or if you need an immediate backup before maintenance.&lt;/p&gt;
+&lt;h3&gt;Troubleshooting&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Timer isn't running&lt;/strong&gt;: Check that you've enabled it with &lt;code&gt;systemctl enable backup-database.timer&lt;/code&gt; and that the service file exists.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Service keeps failing&lt;/strong&gt;: Check the journal logs with &lt;code&gt;journalctl -u backup-database.service&lt;/code&gt; to see the error messages.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Calendar format errors&lt;/strong&gt;: Test your OnCalendar format with &lt;code&gt;systemd-analyze calendar 'your-format'&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;systemd-analyze&lt;span class="w"&gt; &lt;/span&gt;calendar&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;*-*-* 02:00:00&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Overlapping executions&lt;/strong&gt;: If you're concerned about a long-running job, add a check in your script to see if another instance is already running, or use &lt;code&gt;Type=oneshot&lt;/code&gt; to prevent concurrent runs.&lt;/p&gt;
+&lt;h3&gt;When to Use Systemd Timers vs. Cron&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Use systemd timers when:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Running operating system-level services or daemons&lt;/li&gt;
+&lt;li&gt;You need better visibility into job execution history&lt;/li&gt;
+&lt;li&gt;You want to prevent job overlap&lt;/li&gt;
+&lt;li&gt;Immediate manual triggering is important&lt;/li&gt;
+&lt;li&gt;The job is critical to your infrastructure&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Use cron when:&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Running user-level jobs or scripts&lt;/li&gt;
+&lt;li&gt;You only need simple scheduling&lt;/li&gt;
+&lt;li&gt;The job runs intermittently and doesn't need close monitoring&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Systemd timers are a powerful evolution of cron that integrate seamlessly with the rest of your Linux system. With the journal providing detailed logging and systemd's built-in safety features, you get a more robust and maintainable approach to scheduling critical infrastructure jobs.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Systemd"></category><category term="Automation"></category></entry><entry><title>How to Manually Create and Install Let's Encrypt SSL Certificates</title><link href="https://jjriv.com/articles/letsencrypt-manual-certificate-creation/" rel="alternate"></link><published>2025-12-01T00:00:00-08:00</published><updated>2025-12-01T00:00:00-08:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2025-12-01:/articles/letsencrypt-manual-certificate-creation/</id><summary type="html">&lt;p&gt;Learn how to manually create and install Let's Encrypt SSL certificates using DNS or HTTP validation when automated renewal isn't an option.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Most Let&amp;rsquo;s Encrypt tutorials focus on automated certificate renewal using certbot&amp;rsquo;s built-in web server or plugins. That works great if you have a simple setup with a single server running a standard web server. But what if your infrastructure is more complex? Maybe you&amp;rsquo;re running multiple servers behind a load balancer. Or you need a wildcard certificate that covers all subdomains. Or your application uses a non-standard port configuration that doesn&amp;rsquo;t play nicely with certbot&amp;rsquo;s automation.&lt;/p&gt;
+&lt;p&gt;In these situations, manual certificate creation gives you complete control. You generate the certificate using DNS or HTTP validation, then install it wherever you need it. This guide shows you how to create both wildcard and single-domain certificates manually using Let&amp;rsquo;s Encrypt.&lt;/p&gt;
+&lt;h3&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A Linux server with certbot installed&lt;/li&gt;
+&lt;li&gt;DNS access to create TXT records (for wildcard certificates)&lt;/li&gt;
+&lt;li&gt;SSH/root access to your web server&lt;/li&gt;
+&lt;li&gt;A domain pointing to your server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Installing Certbot&lt;/h3&gt;
+&lt;p&gt;If certbot isn&amp;rsquo;t already installed on your server, install it using your package manager:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt&lt;span class="w"&gt; &lt;/span&gt;update
+apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;certbot
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For other Linux distributions or installation methods, visit the &lt;a href="https://certbot.eff.org/instructions"&gt;official certbot instructions&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Creating a Wildcard Certificate&lt;/h3&gt;
+&lt;p&gt;Wildcard certificates cover your main domain and all subdomains using a single certificate. For example, a wildcard cert for &lt;code&gt;*.example.net&lt;/code&gt; covers &lt;code&gt;www.example.net&lt;/code&gt;, &lt;code&gt;api.example.net&lt;/code&gt;, &lt;code&gt;mail.example.net&lt;/code&gt;, and any other subdomain you create.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Step 1: Run Certbot with DNS Validation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Switch to root and run certbot with manual DNS challenge:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;root
+certbot&lt;span class="w"&gt; &lt;/span&gt;certonly&lt;span class="w"&gt; &lt;/span&gt;--manual&lt;span class="w"&gt; &lt;/span&gt;--preferred-challenges&lt;span class="o"&gt;=&lt;/span&gt;dns&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;example.net&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;*.example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Here's what each option does:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;certonly&lt;/strong&gt;: Create a certificate without installing it&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;--manual&lt;/strong&gt;: Perform manual verification instead of automatic validation&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;--preferred-challenges=dns&lt;/strong&gt;: Use DNS validation (TXT records) for the challenge&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;-d example.net&lt;/strong&gt;: Add the root domain to the certificate&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;-d *.example.net&lt;/strong&gt;: Add a wildcard for all subdomains&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Replace &lt;code&gt;example.net&lt;/code&gt; with your actual domain. The command requests a certificate that covers both the root domain and all subdomains.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Step 2: Create the DNS TXT Record&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Certbot will pause and display instructions for creating a DNS TXT record. The output looks like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Please deploy a DNS TXT record under the name:
+
+_acme-challenge.example.net
+
+with the following value:
+
+Kx9mP3nQ2rS8tU5vW7xY9zA1bC3dE4fG6hI8jK0lM2n
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Log into your DNS provider and create a new TXT record:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Name&lt;/strong&gt;: &lt;code&gt;_acme-challenge.example.net&lt;/code&gt; (or just &lt;code&gt;_acme-challenge&lt;/code&gt; depending on your DNS interface)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Type&lt;/strong&gt;: TXT&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Value&lt;/strong&gt;: The string provided by certbot&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Step 3: Verify DNS Propagation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Before pressing Enter to continue in certbot, verify the TXT record is visible. The best way is to query your DNS provider&amp;rsquo;s authoritative nameserver directly, which bypasses any DNS caching.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Option 1: Using dig (command line)&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;First, find your authoritative nameserver:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dig&lt;span class="w"&gt; &lt;/span&gt;+short&lt;span class="w"&gt; &lt;/span&gt;ns&lt;span class="w"&gt; &lt;/span&gt;example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This returns something like &lt;code&gt;ns1.dnshost.com&lt;/code&gt;. Then query that nameserver directly:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dig&lt;span class="w"&gt; &lt;/span&gt;@ns1.dnshost.com&lt;span class="w"&gt; &lt;/span&gt;TXT&lt;span class="w"&gt; &lt;/span&gt;_acme-challenge.example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Look for the TXT record in the answer section. The value should match what certbot gave you:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c"&gt;;; ANSWER SECTION:&lt;/span&gt;
+_acme-challenge.example.net. 300 IN TXT &amp;quot;Kx9mP3nQ2rS8tU5vW7xY9zA1bC3dE4fG6hI8jK0lM2n&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Option 2: Using Google DNS Tool (web-based)&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If &lt;code&gt;dig&lt;/code&gt; isn&amp;rsquo;t installed or you prefer a web interface, use the Google DNS tool:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;toolbox&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;googleapps&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;apps&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;dig&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="c1"&gt;#TXT/_acme-challenge.example.net&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Replace &lt;code&gt;example.net&lt;/code&gt; with your domain. Enter the DNS name in the query field and select TXT as the record type. This tool queries Google&amp;rsquo;s public DNS, so results may lag behind due to TTL caching, but it&amp;rsquo;s convenient for quick checks.&lt;/p&gt;
+&lt;p&gt;Once confirmed, return to the certbot prompt and press Enter to continue. Certbot will verify the DNS record and issue your certificate.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Step 4: Locate Your Certificates&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Certbot stores the generated certificates in &lt;code&gt;/etc/letsencrypt/live/yourdomain/&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls&lt;span class="w"&gt; &lt;/span&gt;-l&lt;span class="w"&gt; &lt;/span&gt;/etc/letsencrypt/live/example.net/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You&amp;rsquo;ll see four files:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;cert.pem&lt;/strong&gt;: Your domain certificate&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;chain.pem&lt;/strong&gt;: The Let&amp;rsquo;s Encrypt intermediate certificate&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;fullchain.pem&lt;/strong&gt;: Your certificate plus the chain (used by most web servers)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;privkey.pem&lt;/strong&gt;: Your private key&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Creating a Single-Domain Certificate&lt;/h3&gt;
+&lt;p&gt;For a single subdomain certificate without wildcard coverage, you can use HTTP validation instead of DNS. This is simpler because certbot can automatically place the validation file on your web server.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt;: If you&amp;rsquo;re behind a load balancer, make sure traffic is only being sent to the server where you&amp;rsquo;re running certbot. Otherwise, the validation request might get routed to a different backend server that doesn&amp;rsquo;t have the validation file.&lt;/p&gt;
+&lt;p&gt;Run certbot with HTTP validation:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;root
+certbot&lt;span class="w"&gt; &lt;/span&gt;certonly&lt;span class="w"&gt; &lt;/span&gt;--manual&lt;span class="w"&gt; &lt;/span&gt;--preferred-challenges&lt;span class="o"&gt;=&lt;/span&gt;http&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;app.example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Certbot will ask you to create a file at a specific URL on your web server. Follow the instructions, verify the file is accessible at the URL, then press Enter to continue.&lt;/p&gt;
+&lt;p&gt;Once issued, you can use the same process as the wildcard certificate to locate your certificate files in &lt;code&gt;/etc/letsencrypt/live/&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Verify the Certificate&lt;/h3&gt;
+&lt;p&gt;After installation, verify your certificate is working correctly. You can use any of these methods:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;SSL Labs&lt;/strong&gt;: Get a detailed security analysis of your certificate and SSL/TLS configuration:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;https://www.ssllabs.com/ssltest/analyze.html?d=example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;sslscan&lt;/strong&gt;: Check certificate details and SSL/TLS configuration from the command line:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;sslscan
+sslscan&lt;span class="w"&gt; &lt;/span&gt;example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This scans your certificate and reports any issues with cipher suites, protocols, or certificate chain problems.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OpenSSL command&lt;/strong&gt;: Check certificate expiration dates:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openssl&lt;span class="w"&gt; &lt;/span&gt;s_client&lt;span class="w"&gt; &lt;/span&gt;-connect&lt;span class="w"&gt; &lt;/span&gt;example.net:443&lt;span class="w"&gt; &lt;/span&gt;-servername&lt;span class="w"&gt; &lt;/span&gt;example.net&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;&lt;span class="w"&gt; &lt;/span&gt;/dev/null&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&amp;gt;/dev/null&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;openssl&lt;span class="w"&gt; &lt;/span&gt;x509&lt;span class="w"&gt; &lt;/span&gt;-noout&lt;span class="w"&gt; &lt;/span&gt;-dates
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Certbot&lt;/strong&gt;: List all certificates on the server:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;certbot&lt;span class="w"&gt; &lt;/span&gt;certificates
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Browser&lt;/strong&gt;: Visit your site via HTTPS and click the padlock icon to view certificate details.&lt;/p&gt;
+&lt;h3&gt;Renewal&lt;/h3&gt;
+&lt;p&gt;Let&amp;rsquo;s Encrypt certificates expire after 90 days. For manual certificates, you&amp;rsquo;ll need to repeat the creation process before expiration. Set a calendar reminder for 60 days from now to renew the certificate, which gives you a 30-day buffer.&lt;/p&gt;
+&lt;p&gt;If you need to renew an existing certificate, run the same certbot command you used initially. Certbot may skip the DNS verification step if the validation is still cached, but be prepared to update DNS records again if prompted.&lt;/p&gt;
+&lt;h3&gt;When to Use Manual vs. Automated&lt;/h3&gt;
+&lt;p&gt;Manual certificate creation is useful when:
+- You need a wildcard certificate covering all subdomains
+- Your infrastructure uses load balancers or non-standard configurations
+- You want to generate a certificate on one server and deploy it to multiple servers
+- Automated renewal isn&amp;rsquo;t working due to firewall or network restrictions&lt;/p&gt;
+&lt;p&gt;For simple single-server setups, automated renewal with certbot&amp;rsquo;s built-in renewal hooks is usually the better choice. But when your infrastructure demands more flexibility, manual creation gives you the control you need while still getting free SSL certificates from Let&amp;rsquo;s Encrypt.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="SSL"></category><category term="Security"></category></entry><entry><title>How to Set Up an SSH Jump Server for Secure Remote Access</title><link href="https://jjriv.com/articles/ssh-jump-server-setup/" rel="alternate"></link><published>2025-09-20T00:00:00-07:00</published><updated>2025-09-20T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2025-09-20:/articles/ssh-jump-server-setup/</id><summary type="html">&lt;p&gt;Learn how to configure an SSH jump server to add an extra layer of security to your production infrastructure by routing all SSH connections through a single hardened proxy.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Exposing SSH directly on your production servers creates a larger attack surface. Each server becomes a potential entry point for attackers attempting password spraying, brute force attacks, or exploiting SSH vulnerabilities. The more servers you have listening on port 22, the more targets you&amp;rsquo;re giving potential attackers.&lt;/p&gt;
 &lt;p&gt;An SSH jump server, also called a bastion host or proxy server, solves this problem by acting as a single gateway for all SSH connections to your infrastructure. Instead of allowing SSH access directly to your production servers, you configure your firewall to only allow SSH from the jump server&amp;rsquo;s IP address. All other SSH traffic is blocked. This reduces your attack surface from dozens of servers down to a single hardened system that you can monitor closely.&lt;/p&gt;
 &lt;p&gt;The jump server acts as an intermediary. You SSH into the jump server first, which then forwards your connection to the destination server. Modern SSH configurations make this transparent—you don&amp;rsquo;t have to manually log into two servers. Instead, SSH automatically routes your connection through the jump server behind the scenes.&lt;/p&gt;
 &lt;p&gt;This guide shows you how to create SSH keys, install them on both the jump server and destination servers, and configure your SSH client to automatically use the jump server.&lt;/p&gt;
@@ -586,7 +704,78 @@ Host web-prod-*
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;ansible_ssh_common_args&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#39;-o&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;ProxyJump=username@jumpserver.example.com&amp;#39;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
-&lt;p&gt;With an SSH jump server properly configured, you&amp;rsquo;ve added a critical security layer to your infrastructure. Your production servers are now protected behind a single hardened gateway, dramatically reducing your exposure to SSH-based attacks.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="SSH"></category><category term="Security"></category></entry><entry><title>How to Configure VSCode SFTP Extension for Remote Development</title><link href="https://jjriv.com/articles/vscode-sftp-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/vscode-sftp-howto/</id><summary type="html">&lt;p&gt;Learn how to configure the VSCode SFTP extension to automatically sync your local files to a remote server whenever you save, making remote development as seamless as working locally.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Working directly on a remote server can be tedious. Constantly running &lt;code&gt;scp&lt;/code&gt; or &lt;code&gt;rsync&lt;/code&gt; commands to upload your changes interrupts your workflow and slows you down. If you&amp;rsquo;re making frequent edits to files that need to run on a remote server, you need a better solution. The SFTP extension for VSCode solves this problem by automatically syncing your local files to the remote server every time you save. You edit locally with all the speed and comfort of your local environment, and your changes are instantly available on the server.&lt;/p&gt;
+&lt;p&gt;With an SSH jump server properly configured, you&amp;rsquo;ve added a critical security layer to your infrastructure. Your production servers are now protected behind a single hardened gateway, dramatically reducing your exposure to SSH-based attacks.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="SSH"></category><category term="Security"></category></entry><entry><title>How to Identify and Cancel Long-Running PostgreSQL Queries</title><link href="https://jjriv.com/articles/postgresql-cancel-long-running-queries/" rel="alternate"></link><published>2025-07-15T00:00:00-07:00</published><updated>2025-07-15T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2025-07-15:/articles/postgresql-cancel-long-running-queries/</id><summary type="html">&lt;p&gt;When a PostgreSQL query gets stuck or runs too long, it can consume database connections and cause your application to become unresponsive. Learn how to identify and terminate these queries before they bring down your system.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Database connections are a finite resource. When queries get stuck in an idle transaction or run longer than expected, they hold onto those connections. As more queries pile up waiting for the stuck ones to complete, your available connections get consumed. Once the connection limit is reached, your application can no longer communicate with the database and becomes unresponsive to users.&lt;/p&gt;
+&lt;p&gt;This situation can happen for several reasons. A poorly optimized query might take hours instead of seconds. A transaction might start but never commit, leaving it idle. A background job could fail partway through and hang indefinitely. Whatever the cause, you need to identify these problematic queries and terminate them before they exhaust your connection pool.&lt;/p&gt;
+&lt;h3&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;SSH access to your PostgreSQL database server&lt;/li&gt;
+&lt;li&gt;Sudo or PostgreSQL superuser privileges&lt;/li&gt;
+&lt;li&gt;PostgreSQL 14 or later (for &lt;code&gt;pg_stat_activity&lt;/code&gt; view)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Step 1: Connect to PostgreSQL&lt;/h3&gt;
+&lt;p&gt;SSH into your database server and switch to the postgres user:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;dbserver.example.com
+sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;postgres
+psql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Identify Long-Running and Stuck Queries&lt;/h3&gt;
+&lt;p&gt;Use the &lt;code&gt;pg_stat_activity&lt;/code&gt; view to see all active database connections and their current queries:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;pid&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;usename&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;application_name&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;client_addr&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;state&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;NOW&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;query_start&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;duration&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="n"&gt;query&lt;/span&gt;
+&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_stat_activity&lt;/span&gt;
+&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;state&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;!=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;idle&amp;#39;&lt;/span&gt;
+&lt;span class="k"&gt;ORDER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;BY&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;duration&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;DESC&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This query shows you all non-idle connections sorted by how long they&amp;rsquo;ve been running. The columns tell you:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;pid&lt;/strong&gt;: The process ID you&amp;rsquo;ll use to cancel or terminate the query&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;usename&lt;/strong&gt;: The database user running the query&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;application_name&lt;/strong&gt;: The application or tool that initiated the connection&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;client_addr&lt;/strong&gt;: The IP address of the client machine&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;state&lt;/strong&gt;: The current state of the connection (active, idle in transaction, etc.)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;duration&lt;/strong&gt;: How long the query has been running&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;query&lt;/strong&gt;: The actual SQL query being executed&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Pay close attention to these warning signs:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Queries stuck in idle transactions&lt;/strong&gt;: Look for &lt;code&gt;state = 'idle in transaction'&lt;/code&gt;. These connections started a transaction but never committed or rolled back. They may hold locks that block other queries.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Long-running queries&lt;/strong&gt;: Check the &lt;code&gt;duration&lt;/code&gt; column. If a query has been running for hours when it should take seconds or minutes, something is wrong.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Repeated identical queries&lt;/strong&gt;: Multiple instances of the same query with long durations might indicate a problem with your application code or a deadlock situation.&lt;/p&gt;
+&lt;h3&gt;Step 3: Cancel the Query&lt;/h3&gt;
+&lt;p&gt;Once you&amp;rsquo;ve identified a problematic query, first try to cancel it gracefully using &lt;code&gt;pg_cancel_backend()&lt;/code&gt;. Replace &lt;code&gt;&amp;lt;pid&amp;gt;&lt;/code&gt; with the process ID from Step 2:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_cancel_backend&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;12345&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code&gt;pg_cancel_backend()&lt;/code&gt; function sends a SIGINT signal to the backend process, which attempts to cancel the current query. The connection remains open and the client receives an error message indicating the query was canceled. This is the safer option because it allows the application to handle the cancellation and potentially retry.&lt;/p&gt;
+&lt;p&gt;If the function returns &lt;code&gt;true&lt;/code&gt;, the cancellation request was sent successfully. Run the query from Step 2 again to verify the process is gone.&lt;/p&gt;
+&lt;h3&gt;Step 4: Terminate the Connection (If Canceling Fails)&lt;/h3&gt;
+&lt;p&gt;If &lt;code&gt;pg_cancel_backend()&lt;/code&gt; doesn&amp;rsquo;t work—the process might be stuck in a state where it can&amp;rsquo;t respond to cancellation—you&amp;rsquo;ll need to forcefully terminate the entire connection:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_terminate_backend&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;12345&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code&gt;pg_terminate_backend()&lt;/code&gt; function sends a SIGTERM signal that forcefully closes the connection. This immediately ends the backend process and rolls back any uncommitted transactions. The client will lose its connection to the database.&lt;/p&gt;
+&lt;p&gt;Use termination as a last resort because it&amp;rsquo;s more disruptive than cancellation. However, when a query is truly stuck and consuming resources, termination is necessary to free up the connection.&lt;/p&gt;
+&lt;h3&gt;Preventing the Problem&lt;/h3&gt;
+&lt;p&gt;While knowing how to terminate stuck queries is useful, preventing them in the first place is better. The first step is to audit your application and determine why queries are running longer than expected, then optimize those queries at the source. Timeouts and forced cancellation are guardrails, not a substitute for query tuning.&lt;/p&gt;
+&lt;p&gt;It&amp;rsquo;s also important to understand that these safeguards can have unintended consequences. If your timeout values are too aggressive, PostgreSQL may cancel legitimate queries before they finish, especially jobs you already know are expected to run longer.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Set statement timeouts&lt;/strong&gt;: Configure &lt;code&gt;statement_timeout&lt;/code&gt; in your PostgreSQL configuration to automatically cancel queries that run longer than a specified duration:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;ALTER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;DATABASE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;myapp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SET&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;statement_timeout&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;5min&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Set idle transaction timeouts&lt;/strong&gt;: Use &lt;code&gt;idle_in_transaction_session_timeout&lt;/code&gt; to automatically close connections stuck in idle transactions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;ALTER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;DATABASE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;myapp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SET&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;idle_in_transaction_session_timeout&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;10min&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Monitor connection usage&lt;/strong&gt;: Set up monitoring to alert you when your connection pool is getting close to the maximum. This gives you time to investigate before connections are exhausted.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Use connection pooling&lt;/strong&gt;: Tools like PgBouncer can help manage connections more efficiently and prevent runaway queries from consuming all available connections.&lt;/p&gt;
+&lt;p&gt;Identifying and terminating problematic queries is an essential skill for maintaining a healthy PostgreSQL database. With these tools, you can quickly diagnose connection issues and restore your application to normal operation before users are significantly impacted.&lt;/p&gt;</content><category term="articles"></category><category term="PostgreSQL"></category><category term="Linux"></category><category term="Database"></category></entry><entry><title>How to Configure VSCode SFTP Extension for Remote Development</title><link href="https://jjriv.com/articles/vscode-sftp-howto/" rel="alternate"></link><published>2025-05-10T00:00:00-07:00</published><updated>2025-05-10T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2025-05-10:/articles/vscode-sftp-howto/</id><summary type="html">&lt;p&gt;Learn how to configure the VSCode SFTP extension to automatically sync your local files to a remote server whenever you save, making remote development as seamless as working locally.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Working directly on a remote server can be tedious. Constantly running &lt;code&gt;scp&lt;/code&gt; or &lt;code&gt;rsync&lt;/code&gt; commands to upload your changes interrupts your workflow and slows you down. If you&amp;rsquo;re making frequent edits to files that need to run on a remote server, you need a better solution. The SFTP extension for VSCode solves this problem by automatically syncing your local files to the remote server every time you save. You edit locally with all the speed and comfort of your local environment, and your changes are instantly available on the server.&lt;/p&gt;
 &lt;p&gt;This guide shows you how to configure the SFTP extension to keep your local workspace synchronized with a remote development server.&lt;/p&gt;
 &lt;h3&gt;Prerequisites&lt;/h3&gt;
 &lt;ul&gt;
