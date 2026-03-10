@@ -241,7 +241,95 @@ www-data hard nofile 65535
 &lt;/ol&gt;
 &lt;p&gt;If static assets return 404 errors, verify that the paths in your Nginx configuration match the actual file paths on your server.&lt;/p&gt;
 &lt;h3&gt;Conclusion&lt;/h3&gt;
-&lt;p&gt;You now have a production-ready deployment of your Next.js application with Nginx serving static content and PM2 managing your Node.js processes. This setup provides high availability, zero-downtime deployments, and efficient static asset delivery. As your application scales, you can expand this architecture by adding multiple backend servers and implementing advanced load balancing strategies.&lt;/p&gt;</content><category term="articles"></category><category term="Next.js"></category><category term="Node.js"></category><category term="Nginx"></category><category term="PM2"></category><category term="Deployment"></category><category term="Linux"></category></entry><entry><title>Why Keeping DNS Records Current is Important</title><link href="https://jjriv.com/articles/keep-dns-records-current-to-prevent-subdomain-attacks/" rel="alternate"></link><published>2024-10-15T00:00:00-07:00</published><updated>2024-10-15T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-10-15:/articles/keep-dns-records-current-to-prevent-subdomain-attacks/</id><summary type="html">&lt;p&gt;Learn why keeping DNS records current is necessary to prevent attackers from taking over a subdomain.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+&lt;p&gt;You now have a production-ready deployment of your Next.js application with Nginx serving static content and PM2 managing your Node.js processes. This setup provides high availability, zero-downtime deployments, and efficient static asset delivery. As your application scales, you can expand this architecture by adding multiple backend servers and implementing advanced load balancing strategies.&lt;/p&gt;</content><category term="articles"></category><category term="Next.js"></category><category term="Node.js"></category><category term="Nginx"></category><category term="PM2"></category><category term="Deployment"></category><category term="Linux"></category></entry><entry><title>How to Configure VSCode SFTP Extension for Remote Development</title><link href="https://jjriv.com/articles/vscode-sftp-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/vscode-sftp-howto/</id><summary type="html">&lt;p&gt;Learn how to configure the VSCode SFTP extension to automatically sync your local files to a remote server whenever you save, making remote development as seamless as working locally.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Working directly on a remote server can be tedious. Constantly running &lt;code&gt;scp&lt;/code&gt; or &lt;code&gt;rsync&lt;/code&gt; commands to upload your changes interrupts your workflow and slows you down. If you&amp;rsquo;re making frequent edits to files that need to run on a remote server, you need a better solution. The SFTP extension for VSCode solves this problem by automatically syncing your local files to the remote server every time you save. You edit locally with all the speed and comfort of your local environment, and your changes are instantly available on the server.&lt;/p&gt;
+&lt;p&gt;This guide shows you how to configure the SFTP extension to keep your local workspace synchronized with a remote development server.&lt;/p&gt;
+&lt;h3&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;VSCode installed on your local machine&lt;/li&gt;
+&lt;li&gt;SSH access to your remote server&lt;/li&gt;
+&lt;li&gt;The SFTP extension installed in VSCode (search for "SFTP" by Natizyskunk in the extensions marketplace)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Step 1: Create Your SSH Key&lt;/h3&gt;
+&lt;p&gt;First, you&amp;rsquo;ll need an SSH key pair to authenticate with your remote server. From your local machine, run:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-keygen
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;When prompted for the file location, give it a descriptive name. For example, if you&amp;rsquo;re connecting to a development server, you might use &lt;code&gt;/home/username/.ssh/devserver&lt;/code&gt;. When prompted for a passphrase, you can leave it blank for convenience, though adding one provides additional security.&lt;/p&gt;
+&lt;p&gt;The output should look similar to this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Generating public/private rsa key pair.
+Enter file in which to save the key (/home/username/.ssh/id_rsa): /home/username/.ssh/devserver
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/username/.ssh/devserver
+Your public key has been saved in /home/username/.ssh/devserver.pub
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now copy the public key to your remote server:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-copy-id&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;/home/username/.ssh/devserver&lt;span class="w"&gt; &lt;/span&gt;username@server.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Test the connection to verify your key is working:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;/home/username/.ssh/devserver&lt;span class="w"&gt; &lt;/span&gt;username@server.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If successful, you&amp;rsquo;ll be logged into the remote server without being prompted for a password.&lt;/p&gt;
+&lt;h3&gt;Step 2: Create the sftp.json Configuration File&lt;/h3&gt;
+&lt;p&gt;The SFTP extension uses a configuration file called &lt;code&gt;sftp.json&lt;/code&gt; to define how and where to sync your files. This file should be placed in the &lt;code&gt;.vscode&lt;/code&gt; directory at the root of your local workspace.&lt;/p&gt;
+&lt;p&gt;If the &lt;code&gt;.vscode&lt;/code&gt; directory doesn&amp;rsquo;t exist yet, create it:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;mkdir&lt;span class="w"&gt; &lt;/span&gt;.vscode
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then create the &lt;code&gt;sftp.json&lt;/code&gt; file inside that directory with the following content:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="p"&gt;{&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;name&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Development Web Server&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;host&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;webserver.example.com&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;protocol&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;sftp&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;port&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;22&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;username&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;developer&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;remotePath&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/var/www/myproject&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;privateKeyPath&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;/home/username/.ssh/devserver&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;uploadOnSave&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;true&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="nt"&gt;&amp;quot;ignore&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.vscode&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;.git&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;node_modules&amp;quot;&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Let&amp;rsquo;s break down what each setting does:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;name&lt;/strong&gt;: A descriptive label for this connection. This is especially useful if you configure multiple remote servers.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;host&lt;/strong&gt;: The hostname or IP address of your remote server.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;protocol&lt;/strong&gt;: The transfer protocol to use. Set this to &lt;code&gt;sftp&lt;/code&gt; for secure file transfer.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;port&lt;/strong&gt;: The SSH port on your remote server. Port 22 is the standard SSH port.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;username&lt;/strong&gt;: Your username on the remote server.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;remotePath&lt;/strong&gt;: The absolute path on the remote server where your files should be synced. This should point to your project directory.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;privateKeyPath&lt;/strong&gt;: The absolute path to the private key you created in Step 1. On Linux this will be in your home directory under &lt;code&gt;.ssh&lt;/code&gt;. On Windows, use the Windows path format like &lt;code&gt;C:/Users/YourName/.ssh/devserver&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;uploadOnSave&lt;/strong&gt;: When set to &lt;code&gt;true&lt;/code&gt;, files are automatically uploaded to the remote server whenever you save them in VSCode.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ignore&lt;/strong&gt;: An array of files and directories that should not be synced to the remote server. Common entries include &lt;code&gt;.vscode&lt;/code&gt;, &lt;code&gt;.git&lt;/code&gt;, and &lt;code&gt;node_modules&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Step 3: Test the Configuration&lt;/h3&gt;
+&lt;p&gt;To verify everything is working correctly, open a file in your workspace and make a small change. When you save the file, VSCode should automatically upload it to the remote server.&lt;/p&gt;
+&lt;p&gt;To see what&amp;rsquo;s happening behind the scenes, open the Output panel in VSCode by clicking &lt;strong&gt;View&lt;/strong&gt; &amp;rarr; &lt;strong&gt;Output&lt;/strong&gt;, then select &lt;strong&gt;SFTP&lt;/strong&gt; from the dropdown menu in the output panel. When you save a file, you should see log messages similar to this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;03-09 14:32:15&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;info&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;file-save&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;projects&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;myproject&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;index&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;
+&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;03-09 14:32:15&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="n"&gt;info&lt;/span&gt;&lt;span class="o"&gt;]&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;local&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="err"&gt;➞&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;remote&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;username&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;projects&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;myproject&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="k"&gt;index&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;php&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;These messages confirm that the file was successfully transferred from your local machine to the remote server.&lt;/p&gt;
+&lt;h3&gt;Troubleshooting Common Issues&lt;/h3&gt;
+&lt;p&gt;If the SFTP extension isn&amp;rsquo;t working as expected, check the following:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Permission denied errors&lt;/strong&gt;: Verify that your SSH key is properly installed on the remote server using the &lt;code&gt;ssh-copy-id&lt;/code&gt; command from Step 1.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Connection timeout&lt;/strong&gt;: Check that your &lt;code&gt;host&lt;/code&gt; and &lt;code&gt;port&lt;/code&gt; settings are correct and that your remote server is reachable. You can test connectivity with &lt;code&gt;ssh -i /path/to/key username@host&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Files not uploading&lt;/strong&gt;: Ensure &lt;code&gt;uploadOnSave&lt;/code&gt; is set to &lt;code&gt;true&lt;/code&gt; in your &lt;code&gt;sftp.json&lt;/code&gt; file and that the file you&amp;rsquo;re editing isn&amp;rsquo;t listed in the &lt;code&gt;ignore&lt;/code&gt; array.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Wrong directory on remote server&lt;/strong&gt;: Double-check that your &lt;code&gt;remotePath&lt;/code&gt; points to the correct directory on the remote server. The path must be absolute, not relative.&lt;/p&gt;
+&lt;h3&gt;Additional Commands&lt;/h3&gt;
+&lt;p&gt;The SFTP extension also provides commands you can run from the VSCode command palette (&lt;strong&gt;Ctrl+Shift+P&lt;/strong&gt; or &lt;strong&gt;Cmd+Shift+P&lt;/strong&gt;):&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;SFTP: Upload&lt;/strong&gt;: Manually upload the current file or folder&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SFTP: Download&lt;/strong&gt;: Download files from the remote server to your local workspace&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SFTP: Sync Local -&amp;gt; Remote&lt;/strong&gt;: Upload all files in your workspace to the remote server&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SFTP: Sync Remote -&amp;gt; Local&lt;/strong&gt;: Download all files from the remote server to your local workspace&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;With the SFTP extension configured, you can now edit your code locally and have it automatically synced to your remote server on every save. This eliminates the need to manually transfer files and makes remote development feel as responsive as working on local files.&lt;/p&gt;</content><category term="articles"></category><category term="VSCode"></category><category term="SFTP"></category><category term="Linux"></category><category term="Web Development"></category></entry><entry><title>Why Keeping DNS Records Current is Important</title><link href="https://jjriv.com/articles/keep-dns-records-current-to-prevent-subdomain-attacks/" rel="alternate"></link><published>2024-10-15T00:00:00-07:00</published><updated>2024-10-15T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-10-15:/articles/keep-dns-records-current-to-prevent-subdomain-attacks/</id><summary type="html">&lt;p&gt;Learn why keeping DNS records current is necessary to prevent attackers from taking over a subdomain.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
 
 &lt;p&gt;Managing DNS records can be a slow and cumbersome process. Most often, you&amp;rsquo;re stuck maintaining them using the web interface provided by the DNS vendor. The more domains and DNS records you manage, the higher the probability that one or more entries will be neglected. Here&amp;rsquo;s why it&amp;rsquo;s important to keep your DNS records current and prevent a subdomain takeover attack. &lt;/p&gt;
 &lt;h2&gt;What is Subdomain Takeover Attack?&lt;/h2&gt;
