@@ -1,5 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv - articles</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/articles.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-09T00:00:00-07:00</updated><entry><title>Configuring Next.js with Nginx and PM2 for Production Deployment</title><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/nextjs-nginx-pm2-howto/</id><summary type="html">&lt;p&gt;A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Deploying a Next.js application to production requires more than just running &lt;code&gt;npm start&lt;/code&gt;. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv - articles</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/articles.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-09T00:00:00-07:00</updated><entry><title>How to Manually Create and Install Let's Encrypt SSL Certificates</title><link href="https://jjriv.com/articles/letsencrypt-manual-certificate-creation/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/letsencrypt-manual-certificate-creation/</id><summary type="html">&lt;p&gt;Learn how to manually create and install Let's Encrypt SSL certificates using DNS or HTTP validation when automated renewal isn't an option.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Most Let&amp;rsquo;s Encrypt tutorials focus on automated certificate renewal using certbot&amp;rsquo;s built-in web server or plugins. That works great if you have a simple setup with a single server running a standard web server. But what if your infrastructure is more complex? Maybe you&amp;rsquo;re running multiple servers behind a load balancer. Or you need a wildcard certificate that covers all subdomains. Or your application uses a non-standard port configuration that doesn&amp;rsquo;t play nicely with certbot&amp;rsquo;s automation.&lt;/p&gt;
+&lt;p&gt;In these situations, manual certificate creation gives you complete control. You generate the certificate using DNS or HTTP validation, then install it wherever you need it. This guide shows you how to create both wildcard and single-domain certificates manually using Let&amp;rsquo;s Encrypt.&lt;/p&gt;
+&lt;h3&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A Linux server with certbot installed&lt;/li&gt;
+&lt;li&gt;DNS access to create TXT records (for wildcard certificates)&lt;/li&gt;
+&lt;li&gt;SSH/root access to your web server&lt;/li&gt;
+&lt;li&gt;A domain pointing to your server&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Installing Certbot&lt;/h3&gt;
+&lt;p&gt;If certbot isn&amp;rsquo;t already installed on your server, install it using your package manager:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt&lt;span class="w"&gt; &lt;/span&gt;update
+apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;certbot
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For other Linux distributions or installation methods, visit the &lt;a href="https://certbot.eff.org/instructions"&gt;official certbot instructions&lt;/a&gt;.&lt;/p&gt;
+&lt;h3&gt;Creating a Wildcard Certificate&lt;/h3&gt;
+&lt;p&gt;Wildcard certificates cover your main domain and all subdomains using a single certificate. For example, a wildcard cert for &lt;code&gt;*.example.net&lt;/code&gt; covers &lt;code&gt;www.example.net&lt;/code&gt;, &lt;code&gt;api.example.net&lt;/code&gt;, &lt;code&gt;mail.example.net&lt;/code&gt;, and any other subdomain you create.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Step 1: Run Certbot with DNS Validation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Switch to root and run certbot with manual DNS challenge:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;root
+certbot&lt;span class="w"&gt; &lt;/span&gt;certonly&lt;span class="w"&gt; &lt;/span&gt;--manual&lt;span class="w"&gt; &lt;/span&gt;--preferred-challenges&lt;span class="o"&gt;=&lt;/span&gt;dns&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;example.net&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;*.example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Here's what each option does:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;certonly&lt;/strong&gt;: Create a certificate without installing it&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;--manual&lt;/strong&gt;: Perform manual verification instead of automatic validation&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;--preferred-challenges=dns&lt;/strong&gt;: Use DNS validation (TXT records) for the challenge&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;-d example.net&lt;/strong&gt;: Add the root domain to the certificate&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;-d *.example.net&lt;/strong&gt;: Add a wildcard for all subdomains&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Replace &lt;code&gt;example.net&lt;/code&gt; with your actual domain. The command requests a certificate that covers both the root domain and all subdomains.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Step 2: Create the DNS TXT Record&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Certbot will pause and display instructions for creating a DNS TXT record. The output looks like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Please deploy a DNS TXT record under the name:
+
+_acme-challenge.example.net
+
+with the following value:
+
+Kx9mP3nQ2rS8tU5vW7xY9zA1bC3dE4fG6hI8jK0lM2n
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Log into your DNS provider and create a new TXT record:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Name&lt;/strong&gt;: &lt;code&gt;_acme-challenge.example.net&lt;/code&gt; (or just &lt;code&gt;_acme-challenge&lt;/code&gt; depending on your DNS interface)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Type&lt;/strong&gt;: TXT&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Value&lt;/strong&gt;: The string provided by certbot&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Step 3: Verify DNS Propagation&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Before pressing Enter to continue in certbot, verify the TXT record is visible. The best way is to query your DNS provider&amp;rsquo;s authoritative nameserver directly, which bypasses any DNS caching.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Option 1: Using dig (command line)&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;First, find your authoritative nameserver:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dig&lt;span class="w"&gt; &lt;/span&gt;+short&lt;span class="w"&gt; &lt;/span&gt;ns&lt;span class="w"&gt; &lt;/span&gt;example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This returns something like &lt;code&gt;ns1.dnshost.com&lt;/code&gt;. Then query that nameserver directly:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;dig&lt;span class="w"&gt; &lt;/span&gt;@ns1.dnshost.com&lt;span class="w"&gt; &lt;/span&gt;TXT&lt;span class="w"&gt; &lt;/span&gt;_acme-challenge.example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Look for the TXT record in the answer section. The value should match what certbot gave you:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c"&gt;;; ANSWER SECTION:&lt;/span&gt;
+_acme-challenge.example.net. 300 IN TXT &amp;quot;Kx9mP3nQ2rS8tU5vW7xY9zA1bC3dE4fG6hI8jK0lM2n&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Option 2: Using Google DNS Tool (web-based)&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If &lt;code&gt;dig&lt;/code&gt; isn&amp;rsquo;t installed or you prefer a web interface, use the Google DNS tool:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;https&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="n"&gt;toolbox&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;googleapps&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;com&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;apps&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="n"&gt;dig&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="c1"&gt;#TXT/_acme-challenge.example.net&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Replace &lt;code&gt;example.net&lt;/code&gt; with your domain. Enter the DNS name in the query field and select TXT as the record type. This tool queries Google&amp;rsquo;s public DNS, so results may lag behind due to TTL caching, but it&amp;rsquo;s convenient for quick checks.&lt;/p&gt;
+&lt;p&gt;Once confirmed, return to the certbot prompt and press Enter to continue. Certbot will verify the DNS record and issue your certificate.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Step 4: Locate Your Certificates&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;Certbot stores the generated certificates in &lt;code&gt;/etc/letsencrypt/live/yourdomain/&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ls&lt;span class="w"&gt; &lt;/span&gt;-l&lt;span class="w"&gt; &lt;/span&gt;/etc/letsencrypt/live/example.net/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You&amp;rsquo;ll see four files:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;cert.pem&lt;/strong&gt;: Your domain certificate&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;chain.pem&lt;/strong&gt;: The Let&amp;rsquo;s Encrypt intermediate certificate&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;fullchain.pem&lt;/strong&gt;: Your certificate plus the chain (used by most web servers)&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;privkey.pem&lt;/strong&gt;: Your private key&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Creating a Single-Domain Certificate&lt;/h3&gt;
+&lt;p&gt;For a single subdomain certificate without wildcard coverage, you can use HTTP validation instead of DNS. This is simpler because certbot can automatically place the validation file on your web server.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt;: If you&amp;rsquo;re behind a load balancer, make sure traffic is only being sent to the server where you&amp;rsquo;re running certbot. Otherwise, the validation request might get routed to a different backend server that doesn&amp;rsquo;t have the validation file.&lt;/p&gt;
+&lt;p&gt;Run certbot with HTTP validation:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;root
+certbot&lt;span class="w"&gt; &lt;/span&gt;certonly&lt;span class="w"&gt; &lt;/span&gt;--manual&lt;span class="w"&gt; &lt;/span&gt;--preferred-challenges&lt;span class="o"&gt;=&lt;/span&gt;http&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;app.example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Certbot will ask you to create a file at a specific URL on your web server. Follow the instructions, verify the file is accessible at the URL, then press Enter to continue.&lt;/p&gt;
+&lt;p&gt;Once issued, you can use the same process as the wildcard certificate to locate your certificate files in &lt;code&gt;/etc/letsencrypt/live/&lt;/code&gt;.&lt;/p&gt;
+&lt;h3&gt;Verify the Certificate&lt;/h3&gt;
+&lt;p&gt;After installation, verify your certificate is working correctly. You can use any of these methods:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;SSL Labs&lt;/strong&gt;: Get a detailed security analysis of your certificate and SSL/TLS configuration:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;https://www.ssllabs.com/ssltest/analyze.html?d=example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;sslscan&lt;/strong&gt;: Check certificate details and SSL/TLS configuration from the command line:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;sslscan
+sslscan&lt;span class="w"&gt; &lt;/span&gt;example.net
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This scans your certificate and reports any issues with cipher suites, protocols, or certificate chain problems.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;OpenSSL command&lt;/strong&gt;: Check certificate expiration dates:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;openssl&lt;span class="w"&gt; &lt;/span&gt;s_client&lt;span class="w"&gt; &lt;/span&gt;-connect&lt;span class="w"&gt; &lt;/span&gt;example.net:443&lt;span class="w"&gt; &lt;/span&gt;-servername&lt;span class="w"&gt; &lt;/span&gt;example.net&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;&lt;span class="w"&gt; &lt;/span&gt;/dev/null&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;2&lt;/span&gt;&amp;gt;/dev/null&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="p"&gt;|&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;openssl&lt;span class="w"&gt; &lt;/span&gt;x509&lt;span class="w"&gt; &lt;/span&gt;-noout&lt;span class="w"&gt; &lt;/span&gt;-dates
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Certbot&lt;/strong&gt;: List all certificates on the server:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;certbot&lt;span class="w"&gt; &lt;/span&gt;certificates
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Browser&lt;/strong&gt;: Visit your site via HTTPS and click the padlock icon to view certificate details.&lt;/p&gt;
+&lt;h3&gt;Renewal&lt;/h3&gt;
+&lt;p&gt;Let&amp;rsquo;s Encrypt certificates expire after 90 days. For manual certificates, you&amp;rsquo;ll need to repeat the creation process before expiration. Set a calendar reminder for 60 days from now to renew the certificate, which gives you a 30-day buffer.&lt;/p&gt;
+&lt;p&gt;If you need to renew an existing certificate, run the same certbot command you used initially. Certbot may skip the DNS verification step if the validation is still cached, but be prepared to update DNS records again if prompted.&lt;/p&gt;
+&lt;h3&gt;When to Use Manual vs. Automated&lt;/h3&gt;
+&lt;p&gt;Manual certificate creation is useful when:
+- You need a wildcard certificate covering all subdomains
+- Your infrastructure uses load balancers or non-standard configurations
+- You want to generate a certificate on one server and deploy it to multiple servers
+- Automated renewal isn&amp;rsquo;t working due to firewall or network restrictions&lt;/p&gt;
+&lt;p&gt;For simple single-server setups, automated renewal with certbot&amp;rsquo;s built-in renewal hooks is usually the better choice. But when your infrastructure demands more flexibility, manual creation gives you the control you need while still getting free SSL certificates from Let&amp;rsquo;s Encrypt.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="SSL"></category><category term="Security"></category></entry><entry><title>Configuring Next.js with Nginx and PM2 for Production Deployment</title><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/nextjs-nginx-pm2-howto/</id><summary type="html">&lt;p&gt;A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Deploying a Next.js application to production requires more than just running &lt;code&gt;npm start&lt;/code&gt;. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.&lt;/p&gt;
 &lt;h3&gt;The Problem&lt;/h3&gt;
 &lt;p&gt;Running a Node.js application directly on your server has several issues. Node.js doesn&amp;rsquo;t restart itself if it crashes. If you try to run multiple instances of your application on the same port, they&amp;rsquo;ll conflict. Static assets like JavaScript, CSS, and images should be served directly by a web server for better performance, not handled by your application server. These problems are solved by combining Nginx and PM2.&lt;/p&gt;
 &lt;p&gt;Nginx acts as a reverse proxy sitting in front of your Next.js application. It serves static assets directly from disk, handles SSL/TLS termination, and forwards everything else to Node. PM2 manages your Node.js processes, keeps them running if they crash, enables clustering across CPU cores, and allows zero-downtime deployments.&lt;/p&gt;
