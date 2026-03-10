@@ -312,7 +312,156 @@ psql
 
 &lt;p&gt;&lt;strong&gt;Monitor connection usage&lt;/strong&gt;: Set up monitoring to alert you when your connection pool is getting close to the maximum. This gives you time to investigate before connections are exhausted.&lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;Use connection pooling&lt;/strong&gt;: Tools like PgBouncer can help manage connections more efficiently and prevent runaway queries from consuming all available connections.&lt;/p&gt;
-&lt;p&gt;Identifying and terminating problematic queries is an essential skill for maintaining a healthy PostgreSQL database. With these tools, you can quickly diagnose connection issues and restore your application to normal operation before users are significantly impacted.&lt;/p&gt;</content><category term="articles"></category><category term="PostgreSQL"></category><category term="Linux"></category><category term="Database"></category></entry><entry><title>How to Configure VSCode SFTP Extension for Remote Development</title><link href="https://jjriv.com/articles/vscode-sftp-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/vscode-sftp-howto/</id><summary type="html">&lt;p&gt;Learn how to configure the VSCode SFTP extension to automatically sync your local files to a remote server whenever you save, making remote development as seamless as working locally.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Working directly on a remote server can be tedious. Constantly running &lt;code&gt;scp&lt;/code&gt; or &lt;code&gt;rsync&lt;/code&gt; commands to upload your changes interrupts your workflow and slows you down. If you&amp;rsquo;re making frequent edits to files that need to run on a remote server, you need a better solution. The SFTP extension for VSCode solves this problem by automatically syncing your local files to the remote server every time you save. You edit locally with all the speed and comfort of your local environment, and your changes are instantly available on the server.&lt;/p&gt;
+&lt;p&gt;Identifying and terminating problematic queries is an essential skill for maintaining a healthy PostgreSQL database. With these tools, you can quickly diagnose connection issues and restore your application to normal operation before users are significantly impacted.&lt;/p&gt;</content><category term="articles"></category><category term="PostgreSQL"></category><category term="Linux"></category><category term="Database"></category></entry><entry><title>How to Set Up an SSH Jump Server for Secure Remote Access</title><link href="https://jjriv.com/articles/ssh-jump-server-setup/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/ssh-jump-server-setup/</id><summary type="html">&lt;p&gt;Learn how to configure an SSH jump server to add an extra layer of security to your production infrastructure by routing all SSH connections through a single hardened proxy.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Exposing SSH directly on your production servers creates a larger attack surface. Each server becomes a potential entry point for attackers attempting password spraying, brute force attacks, or exploiting SSH vulnerabilities. The more servers you have listening on port 22, the more targets you&amp;rsquo;re giving potential attackers.&lt;/p&gt;
+&lt;p&gt;An SSH jump server, also called a bastion host or proxy server, solves this problem by acting as a single gateway for all SSH connections to your infrastructure. Instead of allowing SSH access directly to your production servers, you configure your firewall to only allow SSH from the jump server&amp;rsquo;s IP address. All other SSH traffic is blocked. This reduces your attack surface from dozens of servers down to a single hardened system that you can monitor closely.&lt;/p&gt;
+&lt;p&gt;The jump server acts as an intermediary. You SSH into the jump server first, which then forwards your connection to the destination server. Modern SSH configurations make this transparent—you don&amp;rsquo;t have to manually log into two servers. Instead, SSH automatically routes your connection through the jump server behind the scenes.&lt;/p&gt;
+&lt;p&gt;This guide shows you how to create SSH keys, install them on both the jump server and destination servers, and configure your SSH client to automatically use the jump server.&lt;/p&gt;
+&lt;h3&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A server to act as your jump server (Ubuntu 20.04 or later recommended)&lt;/li&gt;
+&lt;li&gt;One or more destination servers you want to access through the jump server&lt;/li&gt;
+&lt;li&gt;SSH access to all servers (initially using passwords or existing keys)&lt;/li&gt;
+&lt;li&gt;OpenSSH installed on your local machine&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;Important&lt;/strong&gt;: This guide assumes you&amp;rsquo;re using SSH key-based authentication exclusively. Password-based authentication should be disabled on all servers for security reasons. Password logins are vulnerable to brute force attacks and credential stuffing, which is exactly what the jump server architecture is designed to prevent.&lt;/p&gt;
+&lt;h3&gt;Step 1: Create Your SSH Keys&lt;/h3&gt;
+&lt;p&gt;You&amp;rsquo;ll need two separate key pairs. The first key authenticates you to the jump server. The second key authenticates from the jump server to your destination servers.&lt;/p&gt;
+&lt;p&gt;On your local machine, create the jump server key:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-keygen
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;When prompted for the file location, give it a descriptive name:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Enter file in which to save the key: /home/username/.ssh/jumpserver
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For production environments, use a passphrase for extra security:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;Enter&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;empty&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;no&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;[&lt;span class="nv"&gt;enter&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;a&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;strong&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;]
+&lt;span class="nv"&gt;Enter&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;same&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;again&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;[&lt;span class="nv"&gt;repeat&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;]
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For development or test environments, you can skip the passphrase by pressing Enter twice.&lt;/p&gt;
+&lt;p&gt;Your keys are now created:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Your identification has been saved in /home/username/.ssh/jumpserver
+Your public key has been saved in /home/username/.ssh/jumpserver.pub
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Next, create the destination server key using the same process, but with a different name:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-keygen
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nv"&gt;Enter&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;file&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;in&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;which&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;to&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;save&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;the&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;key&lt;/span&gt;:&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;home&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;username&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;.&lt;span class="nv"&gt;ssh&lt;/span&gt;&lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;production&lt;/span&gt;
+&lt;span class="nv"&gt;Enter&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="ss"&gt;(&lt;/span&gt;&lt;span class="nv"&gt;empty&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;for&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;no&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;passphrase&lt;/span&gt;&lt;span class="ss"&gt;)&lt;/span&gt;:
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;You now have four files in your &lt;code&gt;.ssh&lt;/code&gt; directory:
+- &lt;code&gt;jumpserver&lt;/code&gt; and &lt;code&gt;jumpserver.pub&lt;/code&gt; (for accessing the jump server)
+- &lt;code&gt;production&lt;/code&gt; and &lt;code&gt;production.pub&lt;/code&gt; (for accessing production servers)&lt;/p&gt;
+&lt;h3&gt;Step 2: Install the Jump Server Key&lt;/h3&gt;
+&lt;p&gt;Copy your public key to the jump server using &lt;code&gt;ssh-copy-id&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-copy-id&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/jumpserver&lt;span class="w"&gt; &lt;/span&gt;username@jumpserver.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Enter your password when prompted. This is the last time you&amp;rsquo;ll need to use a password for the jump server.&lt;/p&gt;
+&lt;p&gt;Test the key:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/jumpserver&lt;span class="w"&gt; &lt;/span&gt;username@jumpserver.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If successful, you&amp;rsquo;ll be logged in without entering a password.&lt;/p&gt;
+&lt;h3&gt;Step 3: Install the Production Key on the Jump Server&lt;/h3&gt;
+&lt;p&gt;The production key needs to be installed on the jump server so it can authenticate to your destination servers. From your local machine, copy the private key to the jump server:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;scp&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/production&lt;span class="w"&gt; &lt;/span&gt;username@jumpserver.example.com:~/.ssh/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;SSH into the jump server and set proper permissions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/jumpserver&lt;span class="w"&gt; &lt;/span&gt;username@jumpserver.example.com
+chmod&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;600&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/production
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 4: Install the Production Key on Destination Servers&lt;/h3&gt;
+&lt;p&gt;Still logged into the jump server, copy the public key to each destination server:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh-copy-id&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/production&lt;span class="w"&gt; &lt;/span&gt;username@server1.example.com
+ssh-copy-id&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/production&lt;span class="w"&gt; &lt;/span&gt;username@server2.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Test that the jump server can now access the destination servers:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;-i&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/production&lt;span class="w"&gt; &lt;/span&gt;username@server1.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Once confirmed, log out of the jump server and return to your local machine.&lt;/p&gt;
+&lt;h3&gt;Step 5: Configure SSH to Use ProxyJump&lt;/h3&gt;
+&lt;p&gt;Now configure your local SSH client to automatically route connections through the jump server. Create or edit &lt;code&gt;~/.ssh/config&lt;/code&gt; on your local machine:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;vim&lt;span class="w"&gt; &lt;/span&gt;~/.ssh/config
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Add the following configuration:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;# Jump Server
+Host jump
+    Hostname jumpserver.example.com
+    User username
+    IdentityFile ~/.ssh/jumpserver
+
+# Production Servers
+Host prod1 prod2 prod3
+    User username
+    ProxyJump jump
+    IdentityFile ~/.ssh/production
+
+# Specific server mappings
+Host prod1
+    Hostname server1.example.com
+
+Host prod2
+    Hostname server2.example.com
+
+Host prod3
+    Hostname server3.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Let&amp;rsquo;s break down what each setting does:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Host&lt;/strong&gt;: A short alias you can use instead of typing the full hostname&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Hostname&lt;/strong&gt;: The actual FQDN or IP address of the server&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;User&lt;/strong&gt;: Your username on the remote server&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;IdentityFile&lt;/strong&gt;: The path to the private key for authentication&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;ProxyJump&lt;/strong&gt;: Tells SSH to route the connection through the specified jump server&lt;/p&gt;
+&lt;p&gt;With this configuration in place, you can now connect to any production server with a simple command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ssh&lt;span class="w"&gt; &lt;/span&gt;prod1
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;SSH automatically connects to the jump server first, then forwards your connection to the destination server—all in one seamless step. From your perspective, it works just like a direct connection.&lt;/p&gt;
+&lt;h3&gt;Step 6: Configure Firewall Rules&lt;/h3&gt;
+&lt;p&gt;The final step is to lock down your production servers. Configure UFW on each destination server to only allow SSH connections from the jump server&amp;rsquo;s IP address:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;ufw&lt;span class="w"&gt; &lt;/span&gt;allow&lt;span class="w"&gt; &lt;/span&gt;from&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;203&lt;/span&gt;.0.113.10&lt;span class="w"&gt; &lt;/span&gt;to&lt;span class="w"&gt; &lt;/span&gt;any&lt;span class="w"&gt; &lt;/span&gt;port&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;22&lt;/span&gt;
+ufw&lt;span class="w"&gt; &lt;/span&gt;deny&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;22&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Replace &lt;code&gt;203.0.113.10&lt;/code&gt; with your jump server&amp;rsquo;s actual IP address. With these rules in place, SSH attempts from any IP other than your jump server will be blocked at the firewall level.&lt;/p&gt;
+&lt;h3&gt;Using Wildcards for Multiple Servers&lt;/h3&gt;
+&lt;p&gt;If you have many servers with similar hostnames, you can use wildcards in your SSH config:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="gh"&gt;#&lt;/span&gt; All development servers
+Host dev-*
+    User username
+    ProxyJump jump
+    IdentityFile ~/.ssh/development
+
+&lt;span class="gh"&gt;#&lt;/span&gt; All production web servers  
+Host web-prod-*
+    User username
+    ProxyJump jump
+    IdentityFile ~/.ssh/production
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Now any hostname matching the pattern automatically uses the jump server. For example, &lt;code&gt;ssh dev-database&lt;/code&gt; or &lt;code&gt;ssh web-prod-01&lt;/code&gt; will route through your jump server without additional configuration.&lt;/p&gt;
+&lt;h3&gt;Best Practices&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Harden the jump server&lt;/strong&gt;: Since the jump server is your single point of entry, secure it thoroughly. Disable password authentication, keep it patched, enable automatic security updates, and monitor logs for suspicious activity.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Use different keys for different environments&lt;/strong&gt;: Create separate key pairs for development, staging, and production. This limits the blast radius if a key is compromised.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Rotate keys regularly&lt;/strong&gt;: Treat SSH keys like passwords. Rotate them periodically, especially when someone with access leaves the team.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Monitor jump server logs&lt;/strong&gt;: All SSH connections flow through the jump server, making it a central point for security monitoring and audit logging.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Consider a backup jump server&lt;/strong&gt;: If your jump server goes down, you lose access to all your infrastructure. Configure a secondary jump server for redundancy.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Use with Ansible deployments&lt;/strong&gt;: If you use Ansible for deployments, it can also route connections through your jump server. Add the ProxyJump configuration to your Ansible inventory or set the &lt;code&gt;ansible_ssh_common_args&lt;/code&gt; variable to use the same jump server for automated deployments:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="nt"&gt;ansible_ssh_common_args&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;&amp;#39;-o&lt;/span&gt;&lt;span class="nv"&gt; &lt;/span&gt;&lt;span class="s"&gt;ProxyJump=username@jumpserver.example.com&amp;#39;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;With an SSH jump server properly configured, you&amp;rsquo;ve added a critical security layer to your infrastructure. Your production servers are now protected behind a single hardened gateway, dramatically reducing your exposure to SSH-based attacks.&lt;/p&gt;</content><category term="articles"></category><category term="Linux"></category><category term="SSH"></category><category term="Security"></category></entry><entry><title>How to Configure VSCode SFTP Extension for Remote Development</title><link href="https://jjriv.com/articles/vscode-sftp-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/vscode-sftp-howto/</id><summary type="html">&lt;p&gt;Learn how to configure the VSCode SFTP extension to automatically sync your local files to a remote server whenever you save, making remote development as seamless as working locally.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Working directly on a remote server can be tedious. Constantly running &lt;code&gt;scp&lt;/code&gt; or &lt;code&gt;rsync&lt;/code&gt; commands to upload your changes interrupts your workflow and slows you down. If you&amp;rsquo;re making frequent edits to files that need to run on a remote server, you need a better solution. The SFTP extension for VSCode solves this problem by automatically syncing your local files to the remote server every time you save. You edit locally with all the speed and comfort of your local environment, and your changes are instantly available on the server.&lt;/p&gt;
 &lt;p&gt;This guide shows you how to configure the SFTP extension to keep your local workspace synchronized with a remote development server.&lt;/p&gt;
 &lt;h3&gt;Prerequisites&lt;/h3&gt;
 &lt;ul&gt;
