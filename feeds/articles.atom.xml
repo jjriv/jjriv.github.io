@@ -1,5 +1,109 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv - articles</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/articles.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-09T00:00:00-07:00</updated><entry><title>Configuring Next.js with Nginx and PM2 for Production Deployment</title><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/nextjs-nginx-pm2-howto/</id><summary type="html">&lt;p&gt;A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Deploying a Next.js application to production requires more than just running &lt;code&gt;npm start&lt;/code&gt;. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv - articles</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/articles.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-16T00:00:00-07:00</updated><entry><title>Git Branching Strategy for Shared Code Across Multiple Features</title><link href="https://jjriv.com/articles/git-branching-strategy-shared-code/" rel="alternate"></link><published>2026-03-16T00:00:00-07:00</published><updated>2026-03-16T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-16:/articles/git-branching-strategy-shared-code/</id><summary type="html">&lt;p&gt;When multiple feature branches depend on the same code, your branch strategy can either keep development moving or create merge chaos. This guide covers two practical approaches: daisy-chained branches and sibling branches from a shared base.&lt;/p&gt;</summary><content type="html">&lt;p&gt;When you are building multiple features at the same time, there is one problem that shows up quickly: several branches need the same in-progress code.&lt;/p&gt;
+&lt;p&gt;If you do not account for this up front, you end up copying commits around, resolving the same conflicts repeatedly, and wondering why pull requests are impossible to review.&lt;/p&gt;
+&lt;p&gt;I use two branching patterns depending on the type of work. Both are valid. The key is choosing the one that matches the dependency structure of your features.&lt;/p&gt;
+&lt;h3&gt;The Problem&lt;/h3&gt;
+&lt;p&gt;Here is a common scenario where a branching strategy helps.&lt;/p&gt;
+&lt;p&gt;You start one feature branch and start adding code. A day later, you start two more features that also need that same code. One of those new features may also depend on the other.&lt;/p&gt;
+&lt;p&gt;Now your branches are connected, but not all in the same way. If you treat them as completely independent, you will repeatedly solve the same merge conflicts and pull requests become hard to review.&lt;/p&gt;
+&lt;h3&gt;Strategy 1: Daisy-Chained Branches&lt;/h3&gt;
+&lt;p&gt;Use this approach when each feature builds directly on the previous one.&lt;/p&gt;
+&lt;p&gt;Example:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/a&lt;span class="w"&gt; &lt;/span&gt;main
+&lt;span class="c1"&gt;# work, commit&lt;/span&gt;
+
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/b&lt;span class="w"&gt; &lt;/span&gt;feature/a
+&lt;span class="c1"&gt;# work, commit&lt;/span&gt;
+
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/c&lt;span class="w"&gt; &lt;/span&gt;feature/b
+&lt;span class="c1"&gt;# work, commit&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;In this model, each branch has a clear parent:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;feature/a&lt;/code&gt; is the base&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;feature/b&lt;/code&gt; depends on &lt;code&gt;feature/a&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;feature/c&lt;/code&gt; depends on &lt;code&gt;feature/b&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is ideal when features are tightly layered and cannot be completed independently.&lt;/p&gt;
+&lt;h3&gt;How to Maintain a Daisy Chain&lt;/h3&gt;
+&lt;p&gt;Maintenance is the part people underestimate.&lt;/p&gt;
+&lt;p&gt;If &lt;code&gt;feature/a&lt;/code&gt; changes, those changes must be propagated up the chain:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;feature/b
+git&lt;span class="w"&gt; &lt;/span&gt;merge&lt;span class="w"&gt; &lt;/span&gt;feature/a
+
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;feature/c
+git&lt;span class="w"&gt; &lt;/span&gt;merge&lt;span class="w"&gt; &lt;/span&gt;feature/b
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Daisy Chain Best Practices&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Keep each branch focused and small enough to review.&lt;/li&gt;
+&lt;li&gt;Merge parent updates into child branches frequently, not once at the end.&lt;/li&gt;
+&lt;li&gt;Open pull requests early, even as drafts, so review can begin before the entire chain is done.&lt;/li&gt;
+&lt;li&gt;Document branch order in each pull request description, for example: "depends on feature/a".&lt;/li&gt;
+&lt;li&gt;Avoid stacking too deeply. A chain of 2 to 4 branches is manageable. Beyond that, consider splitting work differently.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Strategy 2: Shared Base with Sibling Branches&lt;/h3&gt;
+&lt;p&gt;Use this approach when multiple efforts need the same foundation, but are otherwise independent.&lt;/p&gt;
+&lt;p&gt;Example:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/base&lt;span class="w"&gt; &lt;/span&gt;main
+&lt;span class="c1"&gt;# shared refactor or shared primitives&lt;/span&gt;
+
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/ui&lt;span class="w"&gt; &lt;/span&gt;feature/base
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/api&lt;span class="w"&gt; &lt;/span&gt;feature/base
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;-c&lt;span class="w"&gt; &lt;/span&gt;feature/jobs&lt;span class="w"&gt; &lt;/span&gt;feature/base
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;In this model:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;feature/base&lt;/code&gt; contains common code all siblings need&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;feature/ui&lt;/code&gt;, &lt;code&gt;feature/api&lt;/code&gt;, and &lt;code&gt;feature/jobs&lt;/code&gt; can evolve separately&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This is useful when one large initiative touches multiple areas of the codebase and you want to keep concerns separated while reusing the same base.&lt;/p&gt;
+&lt;h3&gt;How to Maintain a Shared Base Model&lt;/h3&gt;
+&lt;p&gt;The base branch is the critical dependency. Treat it like a product.&lt;/p&gt;
+&lt;p&gt;When &lt;code&gt;feature/base&lt;/code&gt; changes, merge it into each sibling branch:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;feature/ui
+git&lt;span class="w"&gt; &lt;/span&gt;merge&lt;span class="w"&gt; &lt;/span&gt;feature/base
+
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;feature/api
+git&lt;span class="w"&gt; &lt;/span&gt;merge&lt;span class="w"&gt; &lt;/span&gt;feature/base
+
+git&lt;span class="w"&gt; &lt;/span&gt;switch&lt;span class="w"&gt; &lt;/span&gt;feature/jobs
+git&lt;span class="w"&gt; &lt;/span&gt;merge&lt;span class="w"&gt; &lt;/span&gt;feature/base
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Do this regularly. If you wait too long, each sibling diverges and conflict resolution gets expensive.&lt;/p&gt;
+&lt;p&gt;After &lt;code&gt;feature/base&lt;/code&gt; is merged to &lt;code&gt;main&lt;/code&gt;, each sibling should be merged onto updated &lt;code&gt;main&lt;/code&gt; to drop duplicate history and keep pull requests clean.&lt;/p&gt;
+&lt;h3&gt;Shared Base Best Practices&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Keep &lt;code&gt;feature/base&lt;/code&gt; narrowly scoped to truly shared code.&lt;/li&gt;
+&lt;li&gt;Do not sneak sibling-specific logic into &lt;code&gt;feature/base&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Protect &lt;code&gt;feature/base&lt;/code&gt; with CI and code review just like &lt;code&gt;main&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Re-sync siblings from &lt;code&gt;feature/base&lt;/code&gt; on a routine cadence (daily is often right during active development).&lt;/li&gt;
+&lt;li&gt;Use consistent branch naming to make relationships obvious.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Merge Order and Promotion Rules&lt;/h3&gt;
+&lt;p&gt;No matter which strategy you choose, define the merge order before coding.&lt;/p&gt;
+&lt;p&gt;For daisy chains:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Merge lowest parent first.&lt;/li&gt;
+&lt;li&gt;Merge each child only after its parent lands.&lt;/li&gt;
+&lt;li&gt;Re-target pull requests as parent branches merge.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;For shared base plus siblings:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Merge &lt;code&gt;feature/base&lt;/code&gt; first.&lt;/li&gt;
+&lt;li&gt;Merge each sibling onto the updated target branch.&lt;/li&gt;
+&lt;li&gt;Merge siblings independently once they are clean.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;This avoids accidental regressions and keeps review diffs understandable.&lt;/p&gt;
+&lt;h3&gt;Which Strategy Should You Choose?&lt;/h3&gt;
+&lt;p&gt;Use daisy-chained branches when each feature directly depends on the one below it.&lt;/p&gt;
+&lt;p&gt;Use shared base with sibling branches when multiple workstreams need common foundational code but can progress independently.&lt;/p&gt;
+&lt;p&gt;If you choose correctly, your branch strategy reduces risk and makes reviews easier. If you choose poorly, Git becomes the work instead of the tool.&lt;/p&gt;
+&lt;p&gt;A little upfront branch design saves a lot of cleanup later.&lt;/p&gt;</content><category term="articles"></category><category term="Git"></category><category term="Version Control"></category><category term="Development Workflow"></category></entry><entry><title>Configuring Next.js with Nginx and PM2 for Production Deployment</title><link href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="alternate"></link><published>2026-03-09T00:00:00-07:00</published><updated>2026-03-09T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-09:/articles/nextjs-nginx-pm2-howto/</id><summary type="html">&lt;p&gt;A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.&lt;/p&gt;</summary><content type="html">&lt;p&gt;Deploying a Next.js application to production requires more than just running &lt;code&gt;npm start&lt;/code&gt;. You need a reverse proxy to handle static assets efficiently, a process manager to keep your application running, and a strategy for zero-downtime deployments. This tutorial shows you how to configure Nginx and PM2 to deploy a Next.js application in production.&lt;/p&gt;
 &lt;h3&gt;The Problem&lt;/h3&gt;
 &lt;p&gt;Running a Node.js application directly on your server has several issues. Node.js doesn&amp;rsquo;t restart itself if it crashes. If you try to run multiple instances of your application on the same port, they&amp;rsquo;ll conflict. Static assets like JavaScript, CSS, and images should be served directly by a web server for better performance, not handled by your application server. These problems are solved by combining Nginx and PM2.&lt;/p&gt;
 &lt;p&gt;Nginx acts as a reverse proxy sitting in front of your Next.js application. It serves static assets directly from disk, handles SSL/TLS termination, and forwards everything else to Node. PM2 manages your Node.js processes, keeps them running if they crash, enables clustering across CPU cores, and allows zero-downtime deployments.&lt;/p&gt;
