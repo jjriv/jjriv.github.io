@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Pelican" name="generator"/>
+<title>Linux monitoring: top vs htop vs btop</title>
+<link href="https://jjriv.com/articles/top-vs-htop-vs-btop/" rel="canonical"/>
+<link href="https://jjriv.com/theme/css/main.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://jjriv.com/feeds/all.atom.xml" rel="alternate" title="jjriv Atom Feed" type="application/atom+xml">
+<meta content="top, htop, and btop all show you what a Linux system is doing, but they are not equally useful in every situation. Here is when to use each one..." name="description"/>
+</link></link><link href="https://jjriv.com/articles/top-vs-htop-vs-btop/" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Articles", "item": "https://jjriv.com/articles"}, {"@type": "ListItem", "position": 3, "name": "Top vs htop vs btop", "item": "https://jjriv.com/articles/top-vs-htop-vs-btop"}, {"@type": "ListItem", "position": 4, "name": "Index", "item": "https://jjriv.com/articles/top-vs-htop-vs-btop/index.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jjriv"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "Linux monitoring: top vs htop vs btop", "about": "articles", "datePublished": "2025-03-17 00:00"}</script><meta content="https://jjriv.com/articles/top-vs-htop-vs-btop/" property="og:url"/><meta content="article" property="og:type"/><meta content="Linux monitoring: top vs htop vs btop" property="og:title"/><meta content="en_US" property="og:locale"/></head>
+<body>
+<header class="container-fluid">
+<nav class="container">
+<ul>
+<li><a href="/">jjriv</a></li>
+</ul>
+<ul>
+<li><a href="https://jjriv.com/about/">about me</a></li>
+<li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
+<li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg></a></li>
+<li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg></a></li>
+<li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 11l0 5"></path><path d="M8 8l0 .01"></path><path d="M12 16l0 -5"></path><path d="M16 16v-3a2 2 0 0 0 -4 0"></path></svg></a></li>
+<li><a href="https://noc.social/@jjriv" target="_blank" title="mastodon"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-mastodon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M18.648 15.254c-1.816 1.763 -6.648 1.626 -6.648 1.626a18.262 18.262 0 0 1 -3.288 -.256c1.127 1.985 4.12 2.81 8.982 2.475c-1.945 2.013 -13.598 5.257 -13.668 -7.636l-.026 -1.154c0 -3.036 .023 -4.115 1.352 -5.633c1.671 -1.91 6.648 -1.666 6.648 -1.666s4.977 -.243 6.648 1.667c1.329 1.518 1.352 2.597 1.352 5.633s-.456 4.074 -1.352 4.944z"></path><path d="M12 11.204v-2.926c0 -1.258 -.895 -2.278 -2 -2.278s-2 1.02 -2 2.278v4.722m4 -4.722c0 -1.258 .895 -2.278 2 -2.278s2 1.02 2 2.278v4.722"></path></svg></a></li>
+</ul>
+</nav>
+</header><!-- /#banner -->
+<main class="container">
+<div class="grid">
+<div class="mask">
+<section class="body" id="content">
+<article>
+<header>
+<h1 class="entry-title">
+<a href="https://jjriv.com/articles/top-vs-htop-vs-btop/" rel="bookmark" title="Permalink to Linux monitoring: top vs htop vs btop">Linux monitoring: top vs htop vs btop</a></h1>
+</header>
+<div class="entry-content">
+<p>When a Linux server starts to misbehave, <code>top</code> and its siblings, <code>htop</code> and <code>btop</code>, are the first tools I turn to for troubleshooting. If you spend enough time in Linux, like I have, you eventually use all three.</p>
+<p>They all answer the same basic question: what is this system doing right now? But, I have found each one to have its own uniqueness, depending on the situation. </p>
+<h3>top</h3>
+<p><img alt="top process view" src="https://jjriv.com/images/linux-top.png"/></p>
+<p><code>top</code> is installed by default on every Linux distribution. It’s not pretty, but it’s dependable because it’s always there. The best monitoring tool in the world is not helpful if you cannot count on it being present when things are already going pear-shaped.</p>
+<p>I specifically reach for <code>top</code> when troubleshooting high swap usage.  <code>top</code> lets me add the swap column and sort by it. That is a very practical use case, and one that keeps <code>top</code> relevant even when more polished tools are available.</p>
+<p>The downside is usability. <code>top</code> feels like a program from a bygone era. Sorting by CPU or memory requires keyboard commands. The interface is monochrome and dense. It is functional, not friendly.</p>
+<p>That said, it is still worth knowing well. When I am dropped into an unfamiliar Linux environment and need answers immediately, <code>top</code> is often the first thing I run.</p>
+<h3>htop</h3>
+<p><img alt="htop process view" src="https://jjriv.com/images/linux-htop.png"/></p>
+<p><code>htop</code> is the practical upgrade.</p>
+<p>It keeps the same core purpose as <code>top</code>, but presents the information in a colorful and visual manner that is much easier to parse quickly. CPU and memory bars are more readable. Scrolling through processes is easier. Killing a process or changing its priority takes less effort. You spend less time remembering commands and more time looking at the actual problem.</p>
+<p>This is one of the first tools I install on servers I administer. It strikes the best balance between simplicity and usability.</p>
+<p>When I want a quick visual of CPU usage, memory usage, and overall load, <code>htop</code> is usually where I start. I will often sort by <code>CPU%</code> or <code>MEM%</code> to see which processes are consuming more than they should. For that kind of day-to-day troubleshooting, <code>htop</code> is more intuitive than <code>top</code> because the information is easier to absorb immediately.</p>
+<p>Its main drawback is that it is not guaranteed to exist. On many servers you have to install it yourself:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>htop
+</code></pre></div>
+<p>It also uses a little more overhead than <code>top</code>, though in practice that difference is usually negligible on any modern system.</p>
+<h3>btop</h3>
+<p><img alt="btop process tree view" src="https://jjriv.com/images/linux-btop.png"/></p>
+<p><code>btop</code> is the modern, better designed alternative. For newer Linux users, <code>btop</code> is often the most approachable of the three.</p>
+<p>If <code>top</code> is utilitarian and <code>htop</code> is practical, <code>btop</code> is comprehensive. It gives you CPU, memory, disks, network activity, and process information in a single dashboard that is easy to read at a glance. The graphs are useful. The layout is clean. It feels like it was designed by someone who understands the limitations of the terminal well enough to push its boundaries.</p>
+<p>One feature that makes <code>btop</code> especially useful is its tree view. When I need to see how many children a process has spawned, <code>btop</code> makes that obvious very quickly. It also does a better job of showing how much memory each of those children is using, which is exactly the kind of detail that matters when one parent process quietly fans out into a much larger resource problem.</p>
+<p>It is also my go-to when I need to analyze network activity on the private and public network interfaces. <code>btop</code> quickly shows me if the network is maxed out and becoming the bottleneck.</p>
+<p>Like <code>htop</code>, it usually needs to be installed first:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>btop
+</code></pre></div>
+<p>It is a little heavier than <code>htop</code>, but still not heavy in any meaningful sense on normal hardware. </p>
+<h3>Quick comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>top</th>
+<th>htop</th>
+<th>btop</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Availability</td>
+<td>Pre-installed</td>
+<td>Installed separately</td>
+<td>Installed separately</td>
+</tr>
+<tr>
+<td>Interface</td>
+<td>Plain text</td>
+<td>Interactive and easier to read</td>
+<td>Polished and visual</td>
+</tr>
+<tr>
+<td>Navigation</td>
+<td>Keyboard commands</td>
+<td>Keyboard plus limited mouse support</td>
+<td>Keyboard and mouse friendly</td>
+</tr>
+<tr>
+<td>Best at</td>
+<td>Troubleshooting swap</td>
+<td>CPU and memory triage</td>
+<td>Tree view, network view, and broad system overview</td>
+</tr>
+<tr>
+<td>Resource usage</td>
+<td>Very low</td>
+<td>Low</td>
+<td>Low to moderate</td>
+</tr>
+</tbody>
+</table>
+<h3>Which one should you use?</h3>
+<p>Use <code>top</code> when you are on a minimal or production system and need something that is guaranteed to be there, especially if you are chasing down swap usage.</p>
+<p>Use <code>htop</code> when you want the best all-around process viewer and a fast visual read on CPU, memory, and load.</p>
+<p>Use <code>btop</code> when you want a more complete dashboard, especially if you need to identify network problems or inspect process trees and see how resource usage rolls up across child processes.</p>
+<p>If I could only keep one installed on a Linux machine, I would probably choose <code>htop</code>. It is the best middle ground. </p>
+<footer class="post-info">
+<abbr class="published" title="2025-03-17T00:00:00-07:00">
+                Published: Mon 17 March 2025
+        </abbr>
+<p class="tags">Tags: <a href="https://jjriv.com/linux/">Linux</a> <a href="https://jjriv.com/monitoring/">Monitoring</a> <a href="https://jjriv.com/computing/">Computing</a> </p>
+</footer><!-- /.post-info --> </div><!-- /.entry-content -->
+</article>
+</section>
+</div>
+</div>
+</main>
+<footer class="container">
+            jjriv.com is powered by <a href="https://getpelican.com/">Pelican</a> &amp; <a href="https://picocss.com/">Pico</a>
+<svg fill="none" height="17" viewbox="0 0 1020 960" xmlns="http://www.w3.org/2000/svg"><path d="m768.296 576.809c-5.281 2.031-9.455 6.205-11.487 11.487l-78.142 203.17c-6.575 17.094-30.759 17.094-37.334 0l-78.142-203.17c-2.032-5.282-6.206-9.456-11.487-11.487l-203.17-78.142c-17.094-6.575-17.094-30.76 0-37.334l203.17-78.142c5.281-2.032 9.455-6.206 11.487-11.487l78.142-203.17c6.575-17.094 30.759-17.094 37.334 0l78.142 203.17c2.032 5.281 6.206 9.455 11.487 11.487l203.17 78.142c17.094 6.575 17.094 30.759 0 37.334z" fill="#ffbf00"></path><g fill="#ff9500"><path d="m198.667 311.466c-6.575 17.094-30.759 17.094-37.334 0l-28.142-73.17c-2.032-5.282-6.206-9.456-11.487-11.487l-73.1699-28.142c-17.0939-6.575-17.094-30.759-.0001-37.334l73.17-28.142c5.281-2.032 9.455-6.206 11.487-11.487l28.142-73.1701c6.575-17.0939 30.759-17.0938 37.334 0l28.142 73.1701c2.032 5.281 6.206 9.455 11.487 11.487l73.17 28.142c17.094 6.575 17.094 30.759 0 37.334l-73.17 28.142c-5.281 2.031-9.455 6.205-11.487 11.487z"></path><path d="m358.296 826.809c-5.281 2.031-9.455 6.205-11.487 11.487l-28.142 73.17c-6.575 17.094-30.759 17.094-37.334 0l-28.142-73.17c-2.032-5.282-6.206-9.456-11.487-11.487l-73.17-28.142c-17.094-6.575-17.094-30.76 0-37.334l73.17-28.142c5.281-2.032 9.455-6.206 11.487-11.488l28.142-73.169c6.575-17.094 30.759-17.094 37.334 0l28.142 73.169c2.032 5.282 6.206 9.456 11.487 11.488l73.17 28.142c17.094 6.574 17.094 30.759 0 37.334z"></path></g></svg>
+</footer>
+</body>
+</html>
