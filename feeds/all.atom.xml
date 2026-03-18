@@ -1,5 +1,235 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/all.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-16T00:00:00-07:00</updated><entry><title>Git Branching Strategy for Shared Code Across Multiple Features</title><link href="https://jjriv.com/articles/git-branching-strategy-shared-code/" rel="alternate"></link><published>2026-03-16T00:00:00-07:00</published><updated>2026-03-16T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-16:/articles/git-branching-strategy-shared-code/</id><summary type="html">&lt;p&gt;When multiple feature branches depend on the same code, your branch strategy can either keep development moving or create merge chaos. This guide covers two practical approaches: daisy-chained branches and sibling branches from a shared base.&lt;/p&gt;</summary><content type="html">&lt;p&gt;When you are building multiple features at the same time, there is one problem that shows up quickly: several branches need the same in-progress code.&lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/all.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-17T00:00:00-07:00</updated><entry><title>Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)</title><link href="https://jjriv.com/articles/postgresql-logical-replication-primary-replica-migration/" rel="alternate"></link><published>2026-03-17T00:00:00-07:00</published><updated>2026-03-17T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-17:/articles/postgresql-logical-replication-primary-replica-migration/</id><summary type="html">&lt;p&gt;A practical, phased runbook for migrating PostgreSQL from an old primary/replica pair to a new primary/replica pair using logical replication for the major-version move and streaming replication for steady-state high availability.&lt;/p&gt;</summary><content type="html">&lt;p&gt;When you need to migrate PostgreSQL to a new environment and a newer major version, physical replication alone is not enough. Physical replication requires you to promote the replica to primary and upgrade it in-place during the switchover, resulting in more downtime and a higher likelihood of failure.  &lt;/p&gt;
+&lt;p&gt;Logical replication solves that problem. You can replicate data from the old primary to a new primary running a newer version, validate everything while both systems are live, then cut over with a controlled maintenance window. Plus, the new primary will already have its replica in place, which has been streaming from it the entire time. &lt;/p&gt;
+&lt;p&gt;This guide walks through a pattern that works well in production:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Old pair: primary + replica (existing environment)&lt;/li&gt;
+&lt;li&gt;New pair: primary + replica (new environment)&lt;/li&gt;
+&lt;li&gt;Migration method: logical replication from old primary to new primary&lt;/li&gt;
+&lt;li&gt;Steady-state HA on new pair: streaming replication (optionally with WAL archive shipping as fallback)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Why This Pattern Works&lt;/h2&gt;
+&lt;p&gt;Logical replication gives you a rolling migration path across major versions without requiring a long outage. You can:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Build the new cluster in parallel.&lt;/li&gt;
+&lt;li&gt;Continuously sync data while users stay on the old cluster.&lt;/li&gt;
+&lt;li&gt;Cut over after replication lag reaches zero.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Then, once the new primary is live, you keep your normal HA model with streaming replication to the new replica.&lt;/p&gt;
+&lt;h2&gt;Prerequisites&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;PostgreSQL superuser access on old and new clusters&lt;/li&gt;
+&lt;li&gt;Firewall rules for PostgreSQL traffic&lt;/li&gt;
+&lt;li&gt;A dedicated replication user&lt;/li&gt;
+&lt;li&gt;Maintenance window for final cutover&lt;/li&gt;
+&lt;li&gt;Verified backup and rollback plan&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Phase 1: Replicate Old Primary to New Primary with Logical Replication&lt;/h2&gt;
+&lt;h3&gt;1. Prepare connectivity and replication settings on the old primary&lt;/h3&gt;
+&lt;p&gt;Allow the new primary to connect in &lt;code&gt;pg_hba.conf&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;host    replication     &amp;lt;replication_user&amp;gt;    &amp;lt;new_primary_ip&amp;gt;/32    md5
+host    all             all           &amp;lt;new_primary_ip&amp;gt;/32    md5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Set logical replication-related parameters in &lt;code&gt;postgresql.conf&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;wal_level = logical
+max_wal_senders = 12
+max_replication_slots = 10
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code&gt;max_wal_senders&lt;/code&gt; and &lt;code&gt;max_replication_slots&lt;/code&gt; are workload-dependent. Size them for your number of replicas, subscriptions, and expected concurrency rather than copying these values as-is.&lt;/p&gt;
+&lt;p&gt;This will require you to restart PostgreSQL after making the changes, which can be disruptive. I recommend doing the restart during a maintenance window to avoid interrupting your users. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;restart&lt;span class="w"&gt; &lt;/span&gt;postgresql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;2. Grant permissions required by logical replication&lt;/h3&gt;
+&lt;p&gt;On the old primary, grant read access for the replication user:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;GRANT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;ON&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;ALL&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;TABLES&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;IN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;SCHEMA&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;public&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;TO&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&lt;/span&gt;&lt;span class="n"&gt;replication_user&lt;/span&gt;&lt;span class="o"&gt;&amp;gt;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;For tables without a primary key, configure replica identity so &lt;code&gt;UPDATE&lt;/code&gt; and &lt;code&gt;DELETE&lt;/code&gt; can be replicated:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;ALTER&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;TABLE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;some_table_without_pk&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;REPLICA&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;IDENTITY&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FULL&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;3. Prepare roles and schema on the new primary&lt;/h3&gt;
+&lt;p&gt;Dump roles and schema from old primary:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;pg_dumpall&lt;span class="w"&gt; &lt;/span&gt;-r&lt;span class="w"&gt; &lt;/span&gt;-f&lt;span class="w"&gt; &lt;/span&gt;roles.sql
+pg_dump&lt;span class="w"&gt; &lt;/span&gt;-Fc&lt;span class="w"&gt; &lt;/span&gt;-f&lt;span class="w"&gt; &lt;/span&gt;schema.dmp&lt;span class="w"&gt; &lt;/span&gt;-s&lt;span class="w"&gt; &lt;/span&gt;appdb
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Restore both to new primary:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;psql&lt;span class="w"&gt; &lt;/span&gt;-f&lt;span class="w"&gt; &lt;/span&gt;roles.sql
+pg_restore&lt;span class="w"&gt; &lt;/span&gt;-d&lt;span class="w"&gt; &lt;/span&gt;postgres&lt;span class="w"&gt; &lt;/span&gt;-C&lt;span class="w"&gt; &lt;/span&gt;schema.dmp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;4. Optional: make safe schema improvements before cutover&lt;/h3&gt;
+&lt;p&gt;This is one of the biggest advantages of this migration pattern, but timing matters: do these schema changes before you create the subscription in Step 5. The new primary will be a schema only database, a clean slate where you can make changes without being hindered by bloat. &lt;/p&gt;
+&lt;p&gt;Good candidates:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Widening key columns (&lt;code&gt;integer&lt;/code&gt; to &lt;code&gt;bigint&lt;/code&gt;) when growth is a concern&lt;/li&gt;
+&lt;li&gt;Adding missing indexes that would be too disruptive to build with existing data&lt;/li&gt;
+&lt;li&gt;Rebuilding views or functions that need version-specific cleanup&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Keep changes "within reason":&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Avoid risky app-level behavior changes during migration week.&lt;/li&gt;
+&lt;li&gt;Avoid table/column renames during the replication window.&lt;/li&gt;
+&lt;li&gt;Validate foreign keys, sequences, and dependent objects.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In practice, do the schema prep first, then start logical replication. After replication is active, freeze schema changes until cutover is complete.&lt;/p&gt;
+&lt;h3&gt;5. Create publication on old primary and subscription on new primary&lt;/h3&gt;
+&lt;p&gt;Create the publication on the old primary (publisher):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;CREATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;PUBLICATION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_upgrade&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FOR&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;ALL&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;TABLES&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Then connect to the new primary and run the subscription command there. This is the step that tells the new primary to subscribe to the old primary.&lt;/p&gt;
+&lt;p&gt;On new primary (subscriber):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;CREATE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SUBSCRIPTION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_upgrade&lt;/span&gt;
+&lt;span class="k"&gt;CONNECTION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;dbname=appdb host=&amp;lt;old_primary_ip&amp;gt; user=&amp;lt;replication_user&amp;gt; password=&amp;lt;password&amp;gt;&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;PUBLICATION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_upgrade&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;As soon as this command succeeds, PostgreSQL starts the initial table copy and then continues with change replication.&lt;/p&gt;
+&lt;p&gt;Make sure that the new primary has a clear path over the network to the old primary. This may seem obvious, but can often be overlooked, especially in firewalled environments.&lt;/p&gt;
+&lt;h3&gt;6. Schema freeze while logical replication is active&lt;/h3&gt;
+&lt;p&gt;Do not run schema changes on either side while the subscription is active unless you are executing a coordinated, tested change plan.&lt;/p&gt;
+&lt;p&gt;Why this matters:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;PostgreSQL logical replication does not replicate DDL.&lt;/li&gt;
+&lt;li&gt;Publisher/subscriber schema drift can cause replication apply errors and stop replication.&lt;/li&gt;
+&lt;li&gt;Additive changes can sometimes be staged safely, but they still require careful ordering and validation.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Best practice for migrations like this is simple: freeze DDL after &lt;code&gt;CREATE SUBSCRIPTION&lt;/code&gt;, finish data sync and cutover, then resume normal schema migrations.&lt;/p&gt;
+&lt;h3&gt;7. Verify logical replication progress&lt;/h3&gt;
+&lt;p&gt;Useful checks:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;srrelid&lt;/span&gt;&lt;span class="p"&gt;::&lt;/span&gt;&lt;span class="n"&gt;regclass&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_subscription_rel&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This shows per-table subscription state on the subscriber. The &lt;code&gt;srrelid::regclass&lt;/code&gt; cast translates internal table IDs into readable table names so you can quickly spot anything not fully synchronized yet.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;received_lsn&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;latest_end_lsn&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_catalog&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;pg_stat_subscription&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This shows where the subscriber is in the WAL stream. In plain terms: how much data has been received and how far apply/ack progress has moved. During healthy catch-up, these values should stay close.&lt;/p&gt;
+&lt;p&gt;On publisher:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_current_wal_lsn&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This is the publisher's current WAL position right now. Compare it conceptually with subscriber progress (&lt;code&gt;latest_end_lsn&lt;/code&gt;) to judge lag. If the publisher keeps running away from subscriber LSNs, you are not caught up yet.&lt;/p&gt;
+&lt;p&gt;The goal before cutover is straightforward: table sync complete and lag at/near zero.&lt;/p&gt;
+&lt;h2&gt;Phase 2: Build New Replica from New Primary (Streaming Replication)&lt;/h2&gt;
+&lt;p&gt;Once the new primary is receiving logical changes, build the new replica from it.&lt;/p&gt;
+&lt;h3&gt;1. Configure replication access and baseline config&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Add replication access for new replica in new primary &lt;code&gt;pg_hba.conf&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Ensure replica has matching core config where appropriate&lt;/li&gt;
+&lt;li&gt;Reload PostgreSQL after &lt;code&gt;pg_hba.conf&lt;/code&gt; changes&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;2. Seed replica with &lt;code&gt;pg_basebackup&lt;/code&gt;&lt;/h3&gt;
+&lt;p&gt;On new replica:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;stop&lt;span class="w"&gt; &lt;/span&gt;postgresql
+rm&lt;span class="w"&gt; &lt;/span&gt;-rf&lt;span class="w"&gt; &lt;/span&gt;/var/lib/postgresql/&amp;lt;version&amp;gt;/main/*
+pg_basebackup&lt;span class="w"&gt; &lt;/span&gt;-h&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;new_primary_ip&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;-p&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;5432&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-U&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;replication_user&amp;gt;&lt;span class="w"&gt; &lt;/span&gt;-D&lt;span class="w"&gt; &lt;/span&gt;/var/lib/postgresql/&amp;lt;version&amp;gt;/main/&lt;span class="w"&gt; &lt;/span&gt;-Fp&lt;span class="w"&gt; &lt;/span&gt;-Xs&lt;span class="w"&gt; &lt;/span&gt;-R&lt;span class="w"&gt; &lt;/span&gt;-C&lt;span class="w"&gt; &lt;/span&gt;-S&lt;span class="w"&gt; &lt;/span&gt;app_replica_slot
+systemctl&lt;span class="w"&gt; &lt;/span&gt;start&lt;span class="w"&gt; &lt;/span&gt;postgresql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;3. Optional but useful: keep WAL archive shipping enabled&lt;/h3&gt;
+&lt;p&gt;Even with streaming replication and slots, keeping WAL archive shipping as fallback can improve recovery options if a replica falls behind or is rebuilt. &lt;/p&gt;
+&lt;p&gt;Personally, I prefer to implement WAL archive shipping. If a replica falls behind, it can catch up. Otherwise, I would have to rebuild the replica after a sustained network outage. &lt;/p&gt;
+&lt;p&gt;Example parameters:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;archive_mode = on
+archive_command = &amp;#39;cp %p /path/to/wal_archive/%f~ &amp;amp;&amp;amp; mv /path/to/wal_archive/%f~ /path/to/wal_archive/%f&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;On replica, define a corresponding restore command if you use archive-based catch-up. &lt;/p&gt;
+&lt;p&gt;Example from this migration pattern:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;restore_command = &amp;#39;cp -i /postgresql_wal_backup/wal/16/%f %p&amp;#39;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;4. Validate streaming health&lt;/h3&gt;
+&lt;p&gt;On primary:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_stat_replication&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_replication_slots&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;On replica:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_stat_wal_receiver&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_is_in_recovery&lt;/span&gt;&lt;span class="p"&gt;();&lt;/span&gt;
+&lt;span class="k"&gt;SELECT&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;CASE&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="k"&gt;WHEN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_last_wal_receive_lsn&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_last_wal_replay_lsn&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="k"&gt;THEN&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;
+&lt;span class="w"&gt;        &lt;/span&gt;&lt;span class="k"&gt;ELSE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;EXTRACT&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;EPOCH&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;now&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_last_xact_replay_timestamp&lt;/span&gt;&lt;span class="p"&gt;())&lt;/span&gt;
+&lt;span class="w"&gt;    &lt;/span&gt;&lt;span class="k"&gt;END&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;AS&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;log_delay&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;I like this &lt;code&gt;log_delay&lt;/code&gt; check because it gives you an easy seconds-behind estimate. Use it on the replica while it is in recovery (&lt;code&gt;pg_is_in_recovery() = true&lt;/code&gt;). Like any timestamp-based lag metric, treat it as an operational estimate rather than an absolute.&lt;/p&gt;
+&lt;h2&gt;Phase 3: Cutover (Maintenance Window)&lt;/h2&gt;
+&lt;h3&gt;1. Put applications in maintenance mode&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Stop scheduled jobs that write to the database&lt;/li&gt;
+&lt;li&gt;Drain active DB sessions&lt;/li&gt;
+&lt;li&gt;Confirm no active write traffic remains&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Useful check to see if there are any active queries:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_stat_activity&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;state&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;&amp;lt;&amp;gt;&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;idle&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;2. Confirm replication is fully caught up&lt;/h3&gt;
+&lt;p&gt;Validate logical subscriber and streaming replica lag before final shutdown.&lt;/p&gt;
+&lt;h3&gt;3. Stop old primary cleanly&lt;/h3&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;stop&lt;span class="w"&gt; &lt;/span&gt;postgresql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Wait for logs confirming clean shutdown. This is an important safety point: stopping the old primary cleanly ensures all remaining logical changes are delivered before you move write traffic.&lt;/p&gt;
+&lt;h3&gt;4. Advance sequences on new primary (required)&lt;/h3&gt;
+&lt;p&gt;Logical replication does not replicate sequence state. If you skip this step, newly inserted rows absolutely will collide with existing IDs after cutover.&lt;/p&gt;
+&lt;p&gt;Example query to list sequences:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;relname&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_class&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;relkind&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;S&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Example query to advance one sequence to match table data:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;setval&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;orders_id_seq&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;COALESCE&lt;/span&gt;&lt;span class="p"&gt;((&lt;/span&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;MAX&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;id&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;orders&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;true&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;This sets &lt;code&gt;orders_id_seq&lt;/code&gt; to the current max &lt;code&gt;orders.id&lt;/code&gt; (or &lt;code&gt;1&lt;/code&gt; if the table is empty) so the next insert does not reuse an existing ID.&lt;/p&gt;
+&lt;p&gt;I recommend creating a SQL file with all of the updates in it, then run your sequence update SQL on the new primary (example):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;psql&lt;span class="w"&gt; &lt;/span&gt;-h&lt;span class="w"&gt; &lt;/span&gt;localhost&lt;span class="w"&gt; &lt;/span&gt;-U&lt;span class="w"&gt; &lt;/span&gt;appdb_user&lt;span class="w"&gt; &lt;/span&gt;appdb&lt;span class="w"&gt; &lt;/span&gt;&amp;lt;&lt;span class="w"&gt; &lt;/span&gt;update-all-sequences.sql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Use whatever script/process you already trust for sequence alignment, but do not reopen writes until this is complete.&lt;/p&gt;
+&lt;h3&gt;5. Finalize new primary&lt;/h3&gt;
+&lt;p&gt;Typical post-cutover tasks:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Rebuild dependent views/functions changed during prep&lt;/li&gt;
+&lt;li&gt;Drop logical subscription to old primary&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;DROP&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SUBSCRIPTION&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;app_upgrade&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;6. Point applications to new primary&lt;/h3&gt;
+&lt;p&gt;Update connection targets (DNS, host mappings, config, secrets, or service discovery) and validate application behavior.&lt;/p&gt;
+&lt;h2&gt;Phase 4: Post-Cutover Validation and Cleanup&lt;/h2&gt;
+&lt;h3&gt;Validate&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Application reads/writes succeed&lt;/li&gt;
+&lt;li&gt;Replication to new replica remains healthy&lt;/li&gt;
+&lt;li&gt;WAL archiving pipeline is healthy (if used)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Clean up&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Disable old replication/backup jobs tied to retired cluster&lt;/li&gt;
+&lt;li&gt;Decommission old database hosts only after backup verification confirms new path is good&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Common Pitfalls to Avoid&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;Forgetting &lt;code&gt;REPLICA IDENTITY&lt;/code&gt; on tables without primary keys&lt;/li&gt;
+&lt;li&gt;Skipping sequence alignment before reopening writes&lt;/li&gt;
+&lt;li&gt;Making too many schema changes at once during migration&lt;/li&gt;
+&lt;li&gt;Declaring success before backup verification passes on the new cluster&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2&gt;Final Notes&lt;/h2&gt;
+&lt;p&gt;Logical replication is not just an upgrade bridge. It is also a controlled transition window where you can perform overdue, low-risk schema maintenance while moving to new infrastructure.&lt;/p&gt;
+&lt;p&gt;If you keep the scope disciplined, verify lag continuously, and treat cutover as an operational event (not just a SQL event), this pattern gives you a clean migration path from old primary/replica to new primary/replica with minimal downtime and lower stress.&lt;/p&gt;</content><category term="articles"></category><category term="PostgreSQL"></category><category term="Replication"></category><category term="Linux"></category><category term="Database"></category><category term="Upgrade"></category></entry><entry><title>Git Branching Strategy for Shared Code Across Multiple Features</title><link href="https://jjriv.com/articles/git-branching-strategy-shared-code/" rel="alternate"></link><published>2026-03-16T00:00:00-07:00</published><updated>2026-03-16T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-16:/articles/git-branching-strategy-shared-code/</id><summary type="html">&lt;p&gt;When multiple feature branches depend on the same code, your branch strategy can either keep development moving or create merge chaos. This guide covers two practical approaches: daisy-chained branches and sibling branches from a shared base.&lt;/p&gt;</summary><content type="html">&lt;p&gt;When you are building multiple features at the same time, there is one problem that shows up quickly: several branches need the same in-progress code.&lt;/p&gt;
 &lt;p&gt;If you do not account for this up front, you end up copying commits around, resolving the same conflicts repeatedly, and wondering why pull requests are impossible to review.&lt;/p&gt;
 &lt;p&gt;I use two branching patterns depending on the type of work. Both are valid. The key is choosing the one that matches the dependency structure of your features.&lt;/p&gt;
 &lt;h3&gt;The Problem&lt;/h3&gt;
