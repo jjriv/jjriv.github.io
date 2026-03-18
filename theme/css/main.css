@@ -11,7 +11,7 @@
 }
 
 * {
-    color: var(--pico-color-sand-800)
+    color: var(--pico-color-sand-800) !important;
 }
 
 html, body {
