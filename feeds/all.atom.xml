@@ -1,5 +1,159 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/all.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-17T00:00:00-07:00</updated><entry><title>Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)</title><link href="https://jjriv.com/articles/postgresql-logical-replication-primary-replica-migration/" rel="alternate"></link><published>2026-03-17T00:00:00-07:00</published><updated>2026-03-17T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-17:/articles/postgresql-logical-replication-primary-replica-migration/</id><summary type="html">&lt;p&gt;A practical, phased runbook for migrating PostgreSQL from an old primary/replica pair to a new primary/replica pair using logical replication for the major-version move and streaming replication for steady-state high availability.&lt;/p&gt;</summary><content type="html">&lt;p&gt;When you need to migrate PostgreSQL to a new environment and a newer major version, physical replication alone is not enough. Physical replication requires you to promote the replica to primary and upgrade it in-place during the switchover, resulting in more downtime and a higher likelihood of failure.  &lt;/p&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>jjriv</title><link href="https://jjriv.com/" rel="alternate"></link><link href="https://jjriv.com/feeds/all.atom.xml" rel="self"></link><id>https://jjriv.com/</id><updated>2026-03-17T00:00:00-07:00</updated><entry><title>How to Configure PgBouncer for PostgreSQL Connection Pooling</title><link href="https://jjriv.com/articles/pgbouncer-postgresql-connection-pooling/" rel="alternate"></link><published>2026-03-17T00:00:00-07:00</published><updated>2026-03-17T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-17:/articles/pgbouncer-postgresql-connection-pooling/</id><summary type="html">&lt;p&gt;PostgreSQL spawns a new process for every client connection, which becomes expensive under load. Learn how to install and configure PgBouncer to pool connections and keep your database performing well at scale.&lt;/p&gt;</summary><content type="html">&lt;p&gt;PostgreSQL handles each client connection by forking a new backend process. For small applications with a handful of concurrent users, this is not a problem. But as your application grows — more users, more concurrent requests, more background workers — the cost of maintaining hundreds or thousands of individual processes adds up. Memory usage climbs. Context switching becomes measurable. Eventually, you hit the &lt;code&gt;max_connections&lt;/code&gt; limit and your application slows to a crawl as it waits for connections to become free.&lt;/p&gt;
+&lt;p&gt;PgBouncer solves this by acting as a lightweight proxy between your application and PostgreSQL. Your application connects to PgBouncer, which maintains a small pool of real PostgreSQL connections and multiplexes them across all of your application&amp;rsquo;s requests. Instead of PostgreSQL managing a thousand processes, it manages twenty — while your application still has on-demand access to the database.&lt;/p&gt;
+&lt;p&gt;This guide shows you how to install PgBouncer, connect it to an existing PostgreSQL database, and update your application to route connections through it.&lt;/p&gt;
+&lt;h3&gt;Prerequisites&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;A Linux server running Ubuntu (20.04 or later)&lt;/li&gt;
+&lt;li&gt;PostgreSQL installed and running locally&lt;/li&gt;
+&lt;li&gt;Sudo access&lt;/li&gt;
+&lt;li&gt;A PostgreSQL user and database already created for your application&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Step 1: Install PgBouncer&lt;/h3&gt;
+&lt;p&gt;Install PgBouncer using apt:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;apt&lt;span class="w"&gt; &lt;/span&gt;install&lt;span class="w"&gt; &lt;/span&gt;pgbouncer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 2: Configure pgbouncer.ini&lt;/h3&gt;
+&lt;p&gt;PgBouncer is configured through a single INI file at &lt;code&gt;/etc/pgbouncer/pgbouncer.ini&lt;/code&gt;. The file has two sections: &lt;code&gt;[databases]&lt;/code&gt;, which maps alias names to your PostgreSQL databases, and &lt;code&gt;[pgbouncer]&lt;/code&gt;, which controls PgBouncer&amp;rsquo;s own behavior.&lt;/p&gt;
+&lt;p&gt;Open the file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;nano&lt;span class="w"&gt; &lt;/span&gt;/etc/pgbouncer/pgbouncer.ini
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Replace the default contents with the following, substituting your own database name where noted:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;[databases]&lt;/span&gt;
+&lt;span class="na"&gt;myapp&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;host=127.0.0.1 port=5432 dbname=myapp&lt;/span&gt;
+
+&lt;span class="k"&gt;[pgbouncer]&lt;/span&gt;
+&lt;span class="na"&gt;listen_addr&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;*&lt;/span&gt;
+&lt;span class="na"&gt;listen_port&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;6543&lt;/span&gt;
+&lt;span class="na"&gt;auth_type&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;md5&lt;/span&gt;
+&lt;span class="na"&gt;auth_file&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;/etc/pgbouncer/userlist.txt&lt;/span&gt;
+&lt;span class="na"&gt;admin_users&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;postgres&lt;/span&gt;
+&lt;span class="na"&gt;stats_users&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;postgres&lt;/span&gt;
+&lt;span class="na"&gt;pool_mode&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;session&lt;/span&gt;
+&lt;span class="na"&gt;server_reset_query&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;DISCARD ALL&lt;/span&gt;
+&lt;span class="na"&gt;server_check_query&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;select 1&lt;/span&gt;
+&lt;span class="na"&gt;server_check_delay&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;10&lt;/span&gt;
+&lt;span class="na"&gt;max_client_conn&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;10000&lt;/span&gt;
+&lt;span class="na"&gt;default_pool_size&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;20&lt;/span&gt;
+&lt;span class="na"&gt;log_connections&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;0&lt;/span&gt;
+&lt;span class="na"&gt;log_disconnections&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s"&gt;0&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Here&amp;rsquo;s what each setting does:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;[databases]&lt;/code&gt; section&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;myapp&lt;/strong&gt;: The alias your application uses in its connection string. The value tells PgBouncer where to find the real database — in this case, PostgreSQL running on localhost on its default port. You can define as many database aliases as you need, one per line.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;strong&gt;&lt;code&gt;[pgbouncer]&lt;/code&gt; section&lt;/strong&gt;&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;listen_addr&lt;/strong&gt;: The address PgBouncer listens on for incoming connections. &lt;code&gt;*&lt;/code&gt; means all interfaces. If PgBouncer and your application are on the same server, you can restrict this to &lt;code&gt;127.0.0.1&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;listen_port&lt;/strong&gt;: The port your application connects to. &lt;code&gt;6543&lt;/code&gt; is used here to avoid conflicting with PostgreSQL on &lt;code&gt;5432&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;auth_type&lt;/strong&gt;: The authentication method. &lt;code&gt;md5&lt;/code&gt; tells PgBouncer to verify client passwords against the entries in the &lt;code&gt;auth_file&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;auth_file&lt;/strong&gt;: The path to a file containing allowed usernames and their hashed passwords.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;admin_users&lt;/strong&gt;: PostgreSQL users allowed to connect to PgBouncer&amp;rsquo;s admin console.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;stats_users&lt;/strong&gt;: Users allowed to run read-only &lt;code&gt;SHOW&lt;/code&gt; commands on the admin console.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;pool_mode&lt;/strong&gt;: How PgBouncer decides when a server connection can be returned to the pool. &lt;code&gt;session&lt;/code&gt; holds the server connection for the duration of the client session, which is the most compatible choice and works with all PostgreSQL features. The other options are &lt;code&gt;transaction&lt;/code&gt;, which returns connections after each transaction, and &lt;code&gt;statement&lt;/code&gt;, which returns them after each statement.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;server_reset_query&lt;/strong&gt;: The query PgBouncer runs before returning a server connection to the pool, to clear any session state left behind by the previous client. &lt;code&gt;DISCARD ALL&lt;/code&gt; clears prepared statements, advisory locks, and other session-level settings. This is required when using &lt;code&gt;session&lt;/code&gt; pool mode.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;server_check_query&lt;/strong&gt;: A lightweight query PgBouncer runs to verify that a server connection is still alive before assigning it to a client.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;server_check_delay&lt;/strong&gt;: How many seconds PgBouncer waits between liveness checks on idle server connections.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;max_client_conn&lt;/strong&gt;: The maximum total number of client connections PgBouncer will accept across all pools. Set this high enough to cover all of your application instances and worker processes.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;default_pool_size&lt;/strong&gt;: The number of real PostgreSQL connections maintained per database/user pair. This is the number that determines how many backend processes PostgreSQL itself needs to manage.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;log_connections / log_disconnections&lt;/strong&gt;: Logging every connect and disconnect generates significant noise in a busy environment. Setting both to &lt;code&gt;0&lt;/code&gt; keeps your logs focused on errors and warnings.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3&gt;Step 3: Add Users to the Auth File&lt;/h3&gt;
+&lt;p&gt;PgBouncer authenticates clients against a flat text file. The format is one entry per line, with the username and password hash both wrapped in double quotes:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;quot;username&amp;quot; &amp;quot;md5hash&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;PgBouncer expects the same md5-hashed passwords that PostgreSQL stores internally. Rather than computing these by hand, you can pull them directly from PostgreSQL&amp;rsquo;s &lt;code&gt;pg_shadow&lt;/code&gt; view, which requires superuser access.&lt;/p&gt;
+&lt;p&gt;Connect to PostgreSQL as the &lt;code&gt;postgres&lt;/code&gt; user:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;su&lt;span class="w"&gt; &lt;/span&gt;-&lt;span class="w"&gt; &lt;/span&gt;postgres
+psql
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Query the password hash for your application&amp;rsquo;s database user:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="k"&gt;SELECT&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;usename&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;passwd&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;FROM&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;pg_shadow&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;WHERE&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;usename&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;myapp&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The output will look like this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt; usename |               passwd
+---------+-------------------------------------
+ myapp   | md5a1b2c3d4e5f6...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Copy the full value from the &lt;code&gt;passwd&lt;/code&gt; column, including the &lt;code&gt;md5&lt;/code&gt; prefix. Open the auth file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;nano&lt;span class="w"&gt; &lt;/span&gt;/etc/pgbouncer/userlist.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Add an entry for each user PgBouncer needs to authenticate:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;quot;myapp&amp;quot; &amp;quot;md5a1b2c3d4e5f6...&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If you also want to allow the &lt;code&gt;postgres&lt;/code&gt; user to access the PgBouncer admin console, add its hash in the same way:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&amp;quot;myapp&amp;quot; &amp;quot;md5a1b2c3d4e5f6...&amp;quot;
+&amp;quot;postgres&amp;quot; &amp;quot;md5...&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Save the file and lock down its permissions so only the &lt;code&gt;postgres&lt;/code&gt; user can read it:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;chown&lt;span class="w"&gt; &lt;/span&gt;postgres:postgres&lt;span class="w"&gt; &lt;/span&gt;/etc/pgbouncer/userlist.txt
+sudo&lt;span class="w"&gt; &lt;/span&gt;chmod&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;640&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;/etc/pgbouncer/userlist.txt
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;h3&gt;Step 4: Start PgBouncer&lt;/h3&gt;
+&lt;p&gt;Start the PgBouncer service and enable it to start automatically on reboot:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;start&lt;span class="w"&gt; &lt;/span&gt;pgbouncer
+sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nb"&gt;enable&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;pgbouncer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Verify it started cleanly:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;systemctl&lt;span class="w"&gt; &lt;/span&gt;status&lt;span class="w"&gt; &lt;/span&gt;pgbouncer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If there are configuration errors, the service will fail to start and the status output will include the relevant error message. The most common issues at this stage are a malformed &lt;code&gt;pgbouncer.ini&lt;/code&gt; or a &lt;code&gt;userlist.txt&lt;/code&gt; with incorrect formatting.&lt;/p&gt;
+&lt;h3&gt;Step 5: Test the Connection&lt;/h3&gt;
+&lt;p&gt;Verify that PgBouncer is accepting connections and can reach PostgreSQL by connecting through it the same way you would connect to PostgreSQL directly, using port &lt;code&gt;6543&lt;/code&gt; and the database alias you defined in &lt;code&gt;pgbouncer.ini&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;psql&lt;span class="w"&gt; &lt;/span&gt;-h&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1&lt;span class="w"&gt; &lt;/span&gt;-p&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;6543&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-U&lt;span class="w"&gt; &lt;/span&gt;myapp&lt;span class="w"&gt; &lt;/span&gt;myapp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;If the connection succeeds and you can run queries, PgBouncer is working correctly and routing connections through to PostgreSQL.&lt;/p&gt;
+&lt;h3&gt;Step 6: Update Your Application Connection String&lt;/h3&gt;
+&lt;p&gt;The only change your application needs is a different port number. Point it to &lt;code&gt;6543&lt;/code&gt; instead of &lt;code&gt;5432&lt;/code&gt;:&lt;/p&gt;
+&lt;p&gt;Before:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;host=127.0.0.1 port=5432 dbname=myapp user=myapp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;After:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;host=127.0.0.1 port=6543 dbname=myapp user=myapp
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Because PgBouncer presents the same interface as PostgreSQL, your application does not need to know it is talking to a proxy. The database name in the connection string must match the alias defined in the &lt;code&gt;[databases]&lt;/code&gt; section of &lt;code&gt;pgbouncer.ini&lt;/code&gt; — not necessarily the name of the actual PostgreSQL database, though they are often the same.&lt;/p&gt;
+&lt;h3&gt;Monitoring PgBouncer&lt;/h3&gt;
+&lt;p&gt;PgBouncer exposes an admin console you can connect to for live statistics. Connect using any PostgreSQL client, specifying &lt;code&gt;pgbouncer&lt;/code&gt; as the database name:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;psql&lt;span class="w"&gt; &lt;/span&gt;-h&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1&lt;span class="w"&gt; &lt;/span&gt;-p&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="m"&gt;6543&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;-U&lt;span class="w"&gt; &lt;/span&gt;postgres&lt;span class="w"&gt; &lt;/span&gt;pgbouncer
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;From here you can inspect pool health and activity in real time:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="c1"&gt;-- Show all connection pools and their state&lt;/span&gt;
+&lt;span class="k"&gt;SHOW&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;POOLS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="c1"&gt;-- Show aggregate statistics per database&lt;/span&gt;
+&lt;span class="k"&gt;SHOW&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;STATS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="c1"&gt;-- Show active client connections&lt;/span&gt;
+&lt;span class="k"&gt;SHOW&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;CLIENTS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="c1"&gt;-- Show active server connections&lt;/span&gt;
+&lt;span class="k"&gt;SHOW&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="n"&gt;SERVERS&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;The most useful view is &lt;code&gt;SHOW POOLS&lt;/code&gt;, which tells you how many client connections are active, how many are idle, and — most importantly — how many are waiting. If the &lt;code&gt;cl_waiting&lt;/code&gt; column is consistently non-zero, your &lt;code&gt;default_pool_size&lt;/code&gt; is too small for your workload and needs to be increased.&lt;/p&gt;
+&lt;p&gt;You can reload the configuration without restarting PgBouncer, which is convenient when you add or remove users from the auth file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;&lt;span class="n"&gt;RELOAD&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;With PgBouncer in place, PostgreSQL sees a steady, manageable number of connections regardless of how many clients your application opens. The result is lower memory consumption on the database server, less overhead per query, and headroom to scale your application further without hitting PostgreSQL&amp;rsquo;s connection limits.&lt;/p&gt;</content><category term="articles"></category><category term="PostgreSQL"></category><category term="Linux"></category><category term="Database"></category></entry><entry><title>Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)</title><link href="https://jjriv.com/articles/postgresql-logical-replication-primary-replica-migration/" rel="alternate"></link><published>2026-03-17T00:00:00-07:00</published><updated>2026-03-17T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2026-03-17:/articles/postgresql-logical-replication-primary-replica-migration/</id><summary type="html">&lt;p&gt;A practical, phased runbook for migrating PostgreSQL from an old primary/replica pair to a new primary/replica pair using logical replication for the major-version move and streaming replication for steady-state high availability.&lt;/p&gt;</summary><content type="html">&lt;p&gt;When you need to migrate PostgreSQL to a new environment and a newer major version, physical replication alone is not enough. Physical replication requires you to promote the replica to primary and upgrade it in-place during the switchover, resulting in more downtime and a higher likelihood of failure.  &lt;/p&gt;
 &lt;p&gt;Logical replication solves that problem. You can replicate data from the old primary to a new primary running a newer version, validate everything while both systems are live, then cut over with a controlled maintenance window. Plus, the new primary will already have its replica in place, which has been streaming from it the entire time. &lt;/p&gt;
 &lt;p&gt;This guide walks through a pattern that works well in production:&lt;/p&gt;
 &lt;ul&gt;
