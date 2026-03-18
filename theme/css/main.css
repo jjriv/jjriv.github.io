@@ -1,143 +1,76 @@
 /* Imports */
-@import url("pico.grey.css");
+@import url("pico.sand.css");
 @import url("pico.colors.css");
 
 /* Global CSS variables */
-:root {
-    --pico-font-weight: 350;
-    font-family: "Hanken Grotesk";
+:root, :host {
+  --pico-font-weight: 350;
+  --pico-font-family-sans-serif: "Hanken Grotesk",system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, var(--pico-font-family-emoji);
+  --pico-font-family-monospace: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace, var(--pico-font-family-emoji);
+  --pico-font-family: var(--pico-font-family-sans-serif);
 }
 
-html {
-    min-height: 100vh;
+* {
+    color: var(--pico-color-sand-800)
+}
+
+html, body {
+  background-color: var(--pico-color-sand-50);
 }
 
 body {
-    background-image: url("../images/opacity-fade.jpg");
-    background-size: 100%; 
-    background-color: #515151;
-    min-height: 100vh;
-
+    margin: calc(var(--pico-spacing) * 4) auto;
 }
 
-header.container-fluid {
-    background-color: var(--pico-color-grey-750);
-    padding-bottom: 0;
-    position: sticky; top: 0;
-    border-bottom: 17px solid var(--pico-color-amber-250);
+body > header.container {
+    padding-top: calc(var(--pico-block-spacing-vertical) * 1);
 }
 
-header > nav > ul > li, header > nav > ul > li > a {
-    color: var(--pico-color-grey-300);
+header, main, footer {
+  background-color: white;
 }
 
-header > nav > ul > li > a:hover {
-    color: var(--pico-color-amber-300);
+nav > ul:first-child > li {
+    font-size: calc(var(--pico-font-size) * 2.5);
 }
 
-main.container {
-    padding-block: 0;
+nav > ul:first-child > li a {
+    color: var(--pico-color-pumpkin-500);
 }
 
-main div.mask {
-    background-color: #ffffffcc;
-    padding: 3em 1em;
-    margin-left: -1em;
-    margin-right: -1em;
-}
-
-h1 > a {
+nav > ul:first-child > li a:hover {
     text-decoration: none;
 }
 
-main p {
-    color: var(--pico-color-grey-800)
-}
 
-@media (min-width: 768px) {
-    main div.mask {
-        margin-right: 25%;
-        /* width:150%; */
-    }
+.container {
+    padding: calc(var(--pico-block-spacing-vertical) * 2);
 }
-
-.mask :not(.tags,h1,h2,h3,h4) > a {
-    color: var(--pico-color-amber-400);
-    text-decoration-color: var(--pico-color-amber-400); 
-}
-
-.mask :not(.tags,h1,h2,h3,h4) > a:hover {
-    color: var(--pico-color-amber-500);
-    text-decoration-color: var(--pico-color-amber-500); 
-}
-
 
 article {
-    border-radius: none;
+    border-radius: 0;
     background: none;
     box-shadow: none;
-}
-
-article {
-    margin: 0;
-    padding: 0;
-}
-
-article, article > header, article > footer {
-    background-color: transparent;
-    border: none;
-}
-
-section.recent-articles {
-    padding-top: 2rem;
-    margin-top: 2rem;
-    border-top: 1px solid var(--pico-color-grey-300);
-}
-
-section.recent-articles > article, section.tagged-articles > article {
-    padding-top: 1rem;
-}
-
-section.recent-articles > article >  header, section.tagged-articles > article >  header {
-    margin: 0;
-    padding: 0;
-}
-
-section.articles > article {
-    padding-bottom: 1.5rem;  
-}
-
-section.articles > article > header {
+    padding-left: 0;
     margin-bottom: 0;
 }
-    
-
-section.articles > article > header > h3 {
+ article > header {
     margin-bottom: 0;
-    padding-bottom: 0;
-}
+    border: 0;
+ }
 
-footer:not(.post-info), footer:not(.post-info) a {
-    color: var(--pico-color-grey-400);
-}
+ article > section {
+    margin-top: calc(var(--pico-block-spacing-vertical) * -1);
+ }
 
-footer:not(.post-info) a:hover {
-    color: var(--pico-color-grey-200);
-    text-decoration-color: var(--pico-color-grey-200);
-}
+ section.recent-articles {
+    margin-top: calc(var(--pico-block-spacing-vertical) * 3);
+ }
 
-h1, h1 > a, h2, h3, h4, h5, h6 {
-    color: var(--pico-color-grey-700); 
-    font-family: "Hanken Grotesk";
-    /* font-size: 2rem; */
-}
+ h1.entry-title a,  h3 a, h4 a {
+    text-decoration: none;
+ }
 
-pre > code {
-    background-color: var(--pico-color-grey-800);
-    color: var(--pico-color-grey-200);
-}
-
-p > code, p > em > code, ol > li > code {
-    color: var(--pico-color-grey-700);
-    background-color: transparent;
-}
+ h3 a:hover, h4 a:hover {
+    text-decoration: underline;
+ }
