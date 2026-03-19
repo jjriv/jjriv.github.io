@@ -16,7 +16,7 @@
   --pico-primary-hover: var(--pico-color-pumpkin-500);
   --pico-primary-hover-underline: var(--pico-color-pumpkin-500);
   --pico-code-background-color: var(--pico-color-sand-50);
-    --pico-font-family-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+  --pico-font-family-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
 }
 
 /* Emoji styling */
