@@ -1,6 +1,7 @@
 /* Imports */
 @import url("pico.sand.css");
 @import url("pico.colors.css");
+@import url("https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@400..700&display=swap");
 
 /* Global CSS variables */
 :root, 
@@ -15,8 +16,15 @@
   --pico-primary-hover: var(--pico-color-pumpkin-500);
   --pico-primary-hover-underline: var(--pico-color-pumpkin-500);
   --pico-code-background-color: var(--pico-color-sand-50);
+    --pico-font-family-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
 }
 
+/* Emoji styling */
+.emoji {
+    font-family: var(--pico-font-family-emoji) !important;
+    font-size: 1.2em;
+    vertical-align: middle;
+}
 * {
     color: var(--pico-color-sand-800) !important;
 }
@@ -37,8 +45,12 @@ body > header.container {
     padding-top: calc(var(--pico-block-spacing-vertical) * 1);
 }
 
-header, main, footer {
+header, main {
   background-color: white;
+}
+
+footer {
+    background-color: transparent;
 }
 
 nav > ul:first-child > li {
@@ -68,6 +80,7 @@ article {
  article > header {
     margin-bottom: 0;
     border: 0;
+    background-color: transparent;
  }
 
  article > section {
