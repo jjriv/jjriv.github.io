@@ -25,6 +25,8 @@
   --pico-h4-color: var(--pico-primary);
   --pico-h5-color: var(--pico-primary);
   --pico-h6-color: var(--pico-primary);
+  --pico-code-color: var(--pico-color-grey-600);
+  --pico-code-background-color: var(--pico-color-grey-100);
 
 }
 
@@ -38,11 +40,11 @@ a:hover {
 }
 
 html {
-background: radial-gradient(
-    circle,
+  background: radial-gradient(
+    circle at 75% 33%,
     var(--pico-color-grey-50),
     var(--pico-color-grey-600)
-);
+  );
 }
 
 header {
