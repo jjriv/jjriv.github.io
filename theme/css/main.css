@@ -1,7 +1,6 @@
 /* Imports */
 @import url("pico.grey.css");
 @import url("pico.colors.css");
-@import url("https://fonts.googleapis.com/css2?family=Noto+Emoji:wght@400..700&display=swap");
 
 /* Global CSS variables */
 :root, 
@@ -13,10 +12,11 @@
   --pico-font-family-sans-serif: "Hanken Grotesk",system-ui, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, Helvetica, Arial, "Helvetica Neue", sans-serif, var(--pico-font-family-emoji);
   --pico-font-family-monospace: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace, var(--pico-font-family-emoji);
   --pico-font-family: var(--pico-font-family-sans-serif);
+  --pico-font-family-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
+  --pico-font-family-serif: "Crimson Pro", serif;
   --pico-primary-hover: var(--pico-color-pumpkin-500);
   --pico-primary-hover-underline: var(--pico-color-pumpkin-500);
   --pico-code-background-color: var(--pico-color-grey-50);
-  --pico-font-family-emoji: 'Noto Emoji', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji', sans-serif;
   --pico-primary: var(--pico-color-grey-700);
   --pico-color: var(--pico-primary);
   --pico-h1-color: var(--pico-primary);
@@ -74,7 +74,9 @@ body > footer a:hover {
 }
 
 nav > ul:first-child > li {
-    font-size: calc(var(--pico-font-size) * 2.5);
+    font-size: calc(var(--pico-font-size) * 2);
+    font-family: var(--pico-font-family-serif);
+    font-weight: 300;
 }
 
 nav > ul:first-child > li a {
@@ -87,6 +89,12 @@ nav > ul:first-child > li a:hover {
 
 .container {
     padding: calc(var(--pico-block-spacing-vertical) * 2);
+}
+
+h1,h2,h3,h4,h5,h6 {
+    font-family: var(--pico-font-family-serif);
+    font-weight:500;
+    font-size: calc(var(--pico-font-size) * 1.25);
 }
 
 article {
