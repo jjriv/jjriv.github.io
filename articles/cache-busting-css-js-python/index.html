@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Pelican" name="generator"/>
+<title>Cache-busting CSS and Javascript with Python</title>
+<link href="https://jjriv.com/articles/cache-busting-css-js-python/" rel="canonical"/>
+<link href="https://jjriv.com/theme/css/main.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Noto+Emoji:wght@400..700&amp;family=Crimson+Pro:wght@200..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://jjriv.com/feeds/all.atom.xml" rel="alternate" title="jjriv Atom Feed" type="application/atom+xml">
+<meta content="A practical guide to solving browser cache issues for static assets using a Python-based approach, with code you can drop into your deployment and..." name="description"/>
+</link></link><link href="https://jjriv.com/articles/cache-busting-css-js-python/" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Articles", "item": "https://jjriv.com/articles"}, {"@type": "ListItem", "position": 3, "name": "Cache busting css js python", "item": "https://jjriv.com/articles/cache-busting-css-js-python"}, {"@type": "ListItem", "position": 4, "name": "Index", "item": "https://jjriv.com/articles/cache-busting-css-js-python/index.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jjriv"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "Cache-busting CSS and Javascript with Python", "about": "articles", "datePublished": "2026-03-25 00:00"}</script><meta content="https://jjriv.com/articles/cache-busting-css-js-python/" property="og:url"/><meta content="article" property="og:type"/><meta content="Cache-busting CSS and Javascript with Python" property="og:title"/><meta content="en_US" property="og:locale"/></head>
+<body>
+<header class="container">
+<nav>
+<ul>
+<li><a href="/">jjriv</a></li>
+</ul>
+<ul>
+<li><a href="https://jjriv.com/about/">about me</a></li>
+<li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
+<li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg></a></li>
+<li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg></a></li>
+<li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 11l0 5"></path><path d="M8 8l0 .01"></path><path d="M12 16l0 -5"></path><path d="M16 16v-3a2 2 0 0 0 -4 0"></path></svg></a></li>
+<li><a href="https://noc.social/@jjriv" target="_blank" title="mastodon"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-mastodon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M18.648 15.254c-1.816 1.763 -6.648 1.626 -6.648 1.626a18.262 18.262 0 0 1 -3.288 -.256c1.127 1.985 4.12 2.81 8.982 2.475c-1.945 2.013 -13.598 5.257 -13.668 -7.636l-.026 -1.154c0 -3.036 .023 -4.115 1.352 -5.633c1.671 -1.91 6.648 -1.666 6.648 -1.666s4.977 -.243 6.648 1.667c1.329 1.518 1.352 2.597 1.352 5.633s-.456 4.074 -1.352 4.944z"></path><path d="M12 11.204v-2.926c0 -1.258 -.895 -2.278 -2 -2.278s-2 1.02 -2 2.278v4.722m4 -4.722c0 -1.258 .895 -2.278 2 -2.278s2 1.02 2 2.278v4.722"></path></svg></a></li>
+</ul>
+</nav>
+</header><!-- /#banner -->
+<main class="container">
+<div class="grid">
+<div class="mask">
+<section class="body" id="content">
+<article>
+<header>
+<h1 class="entry-title">
+<a href="https://jjriv.com/articles/cache-busting-css-js-python/" rel="bookmark" title="Permalink to Cache-busting CSS and Javascript with Python">Cache-busting CSS and Javascript with Python</a></h1>
+</header>
+<div class="entry-content">
+<p>If you’ve ever deployed a new version of your website only to have users report “nothing changed” or “the layout is broken,” you’ve probably run into the classic browser caching problem. Even with all the right HTTP headers, browsers can be stubborn about holding onto old CSS and JS files. This can lead to frustrating support issues, especially when you’re troubleshooting what customers are actually seeing.</p>
+<p>There are plenty of server-side tricks for cache-busting, but sometimes you don’t have access to the server configuration, or you want a solution that’s portable and code-driven. Here’s a Python-based approach I’ve used in production to ensure users always get the latest assets.</p>
+<h2>The Problem: Stale Assets After Deployment</h2>
+<p>Browsers cache static assets aggressively. That’s usually a good thing, but it becomes a headache when you deploy updates to your CSS or JS and users’ browsers stay latched on to the previous versions. Even with cache-control headers, you can’t always guarantee a fresh load, especially if proxies or CDNs are involved.</p>
+<h2>The Solution: Hash-based Cache Busting</h2>
+<p>The idea is simple: whenever you deploy, generate a unique filename for each asset based on its content. For example, <code>main.css</code> becomes <code>main-&lt;md5hash&gt;.css</code>. When the file changes, so does the hash, guaranteeing a unique hash for each version. The new filename forces the browser to fetch the new file. All you need is a way to generate these filenames and reference them in your templates.</p>
+<h3>1. Building the Asset Manifest</h3>
+<p>The first step is to process your asset directories at deploy time, generate hashed filenames, and build a manifest mapping original filenames to their cache-busted versions. Here’s a script that does exactly that:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">glob</span>
+
+<span class="k">def</span> <span class="nf">md5_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">process_asset_dir</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">,</span> <span class="n">mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Recursively process a directory, copying files to a cache/ subdir with MD5 names."""</span>
+    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s2">"cache"</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">base_dir</span><span class="p">):</span>
+        <span class="c1"># Skip dotfiles, .scss, and the cache dir itself</span>
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"."</span><span class="p">)</span> <span class="ow">or</span> <span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">".scss"</span><span class="p">)</span> <span class="ow">or</span> <span class="n">entry</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">"cache"</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">is_file</span><span class="p">()</span> <span class="ow">and</span> <span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="sa">f</span><span class="s2">".</span><span class="si">{</span><span class="n">asset_type</span><span class="si">}</span><span class="s2">"</span><span class="p">):</span>
+            <span class="n">stem</span> <span class="o">=</span> <span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span> <span class="o">-</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">asset_type</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span>  <span class="c1"># filename without extension</span>
+            <span class="n">hash_str</span> <span class="o">=</span> <span class="n">md5_file</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">cache_filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">stem</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">hash_str</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">asset_type</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">cache_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="n">cache_filename</span><span class="p">)</span>
+
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy2</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">cache_path</span><span class="p">)</span>
+
+            <span class="c1"># Map relative source path → relative cache path</span>
+            <span class="n">rel_source</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">relpath</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">base_dir</span><span class="p">)</span>
+            <span class="n">rel_cache</span>  <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"cache"</span><span class="p">,</span> <span class="n">cache_filename</span><span class="p">)</span>
+            <span class="n">mapping</span><span class="p">[</span><span class="n">rel_source</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel_cache</span>
+
+        <span class="k">elif</span> <span class="n">entry</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="n">process_asset_dir</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">remove_stale_cache_files</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">,</span> <span class="n">current_mapping</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Delete any cache files that are no longer referenced in the mapping."""</span>
+    <span class="n">active</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">current_mapping</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+    <span class="n">cache_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="s2">"cache"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">):</span>
+        <span class="k">return</span>
+    <span class="k">for</span> <span class="n">filepath</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"*.</span><span class="si">{</span><span class="n">asset_type</span><span class="si">}</span><span class="s2">"</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">active</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">build_asset_manifest</span><span class="p">(</span><span class="n">www_dir</span><span class="p">,</span> <span class="n">output_path</span><span class="p">):</span>
+    <span class="n">mapping</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">for</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"js"</span><span class="p">,</span> <span class="s2">"css"</span><span class="p">):</span>
+        <span class="n">asset_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">www_dir</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">asset_dir</span><span class="p">):</span>
+            <span class="n">process_asset_dir</span><span class="p">(</span><span class="n">asset_dir</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+
+    <span class="c1"># Write the manifest</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="s2">"w"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">mapping</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">output_path</span><span class="p">,</span> <span class="mo">0o775</span><span class="p">)</span>
+
+    <span class="c1"># Remove stale files only after the new manifest is written</span>
+    <span class="k">for</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"js"</span><span class="p">,</span> <span class="s2">"css"</span><span class="p">):</span>
+        <span class="n">asset_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">www_dir</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">asset_dir</span><span class="p">):</span>
+            <span class="n">remove_stale_cache_files</span><span class="p">(</span><span class="n">asset_dir</span><span class="p">,</span> <span class="n">asset_type</span><span class="p">,</span> <span class="n">mapping</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mapping</span>
+</code></pre></div>
+<p>The code above runs during deployment and can be implemented into your CI/CD pipeline or triggered manually. To actually use it, call the <code>build_asset_manifest</code> function. This will walk through your <code>js/</code> and <code>css/</code> directories, copy each file to a <code>cache/</code> subdirectory with a hash in the filename, and write a manifest JSON file mapping original filenames to their cache-busted versions.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># --- Usage Example ---</span>
+<span class="n">build_asset_manifest</span><span class="p">(</span>
+<span class="w">    </span><span class="n">www_dir</span><span class="o">=</span><span class="s2">"/var/www/html"</span><span class="p">,</span>
+<span class="w">    </span><span class="n">output_path</span><span class="o">=</span><span class="s2">"/var/www/templates/inc/asset_manifest.json"</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><strong>A note on stale files:</strong></p>
+<p>If you stop at only generating new hashed filenames on every deploy, you’ll quickly accumulate a lot of old, unused files in your cache directory. This can clutter your server and waste disk space. That’s why the script includes logic to remove stale cache files. After writing the new manifest, it calls the <code>remove_stale_cache_files</code> function, which scans the cache directory and deletes any files that are no longer referenced. This keeps your asset cache clean and ensures only the current versions remain on disk.</p>
+<h3>2. Updating the Template Layer</h3>
+<p>The following function can live in a utility module that’s available to your template engine (Jinja2, Django, Flask, etc.). You only need to call <code>asset_url('main.css')</code> or <code>asset_url('app.js')</code> in your templates, and it will automatically resolve to the correct hashed filename.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">_manifest</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="k">def</span> <span class="nf">asset_url</span><span class="p">(</span><span class="n">relative_path</span><span class="p">,</span> <span class="n">manifest_path</span><span class="o">=</span><span class="s2">"/var/www/templates/inc/asset_manifest.json"</span><span class="p">):</span>
+    <span class="k">global</span> <span class="n">_manifest</span>
+    <span class="k">if</span> <span class="n">_manifest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">manifest_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">_manifest</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="n">hashed_path</span> <span class="o">=</span> <span class="n">_manifest</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">relative_path</span><span class="p">,</span> <span class="n">relative_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">"/"</span> <span class="o">+</span> <span class="n">hashed_path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">,</span> <span class="s2">"/"</span><span class="p">)</span>
+</code></pre></div>
+<p>On first call, this code loads the manifest JSON into memory. For each asset, it looks up the cache-busted filename. If the asset isn’t found in the manifest (e.g., during development), it falls back to the original filename.</p>
+<hr/>
+<h2>Why Not Use Query Strings?</h2>
+<p>Some readers may point out that you can achieve cache busting by simply appending a query string to your asset URLs, like <code>main.css?v=1.2.3</code>. While this works in many cases, it’s not foolproof — especially if you’re using a CDN or certain proxy configurations. Many CDNs and intermediate caches will ignore query strings for static assets, or may not treat them as unique resources. By changing the actual filename, you guarantee that every layer (browser, CDN, proxy) sees it as a new file and fetches it fresh. This approach is more robust and production-safe, especially for larger or distributed deployments.</p>
+<hr/>
+<h2>What About Race Conditions?</h2>
+<p>If you are deploying to a load balanced environment you may encounter issues with active requests trying to access a hashed filename after it’s been deleted. This happens when the manifest on one server hasn’t updated yet, resulting in a static asset request being sent to another server. If you find yourself in this situation, you have three options:</p>
+<ol>
+<li>Build the hashed files and manifest before you deploy your codebase to production. This can be done during your build process or inside your CI/CD pipeline.</li>
+<li>Modify the build script in this article to maintain the previous version of the manifest and hashed files. </li>
+<li>Do nothing and allow the <code>asset_url</code> function to gracefully fall back to the unhashed filename.</li>
+</ol>
+<hr/>
+<h2>Conclusion</h2>
+<p>This approach is robust, portable, and doesn’t require any server configuration changes. It’s saved me countless hours of support headaches and ensures that users always get the latest assets after a deployment. </p>
+<footer class="post-info">
+<abbr class="published" title="2026-03-25T00:00:00-07:00">
+                Published: Wed 25 March 2026
+        </abbr>
+<p class="tags">Tags: <a href="https://jjriv.com/python/">python</a> <a href="https://jjriv.com/cache-busting/">cache-busting</a> <a href="https://jjriv.com/css/">css</a> <a href="https://jjriv.com/javascript/">javascript</a> <a href="https://jjriv.com/deployment/">deployment</a> </p>
+</footer><!-- /.post-info --> </div><!-- /.entry-content -->
+</article>
+</section>
+</div>
+</div>
+</main>
+<footer class="container">
+            jjriv.com is powered by <a href="https://getpelican.com/">Pelican</a> &amp; <a href="https://picocss.com/">Pico</a>
+<span class="emoji">✨</span>
+</footer>
+</body>
+</html>

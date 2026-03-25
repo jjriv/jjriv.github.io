@@ -13,7 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Noto+Emoji:wght@400..700&amp;family=Crimson+Pro:wght@200..900&amp;display=swap" rel="stylesheet"/>
 <link href="https://jjriv.com/feeds/all.atom.xml" rel="alternate" title="jjriv Atom Feed" type="application/atom+xml">
 <meta content="Step-by-step guide to building, styling, deploying, and securing a static website using Pelican, Pico CSS, GitHub Pages, and Cloudflare. Covers..." name="description"/>
-</link></link><link href="https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Drafts", "item": "https://jjriv.com/drafts"}, {"@type": "ListItem", "position": 3, "name": "Pelican pico github cloudflare guide", "item": "https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jreeve"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "Building a Website with Pelican, Pico CSS, GitHub Pages, and Cloudflare", "about": "web-development", "datePublished": "2026-03-19 00:00"}</script><meta content="https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html" property="og:url"/><meta content="article" property="og:type"/><meta content="Building a Website with Pelican, Pico CSS, GitHub Pages, and Cloudflare" property="og:title"/><meta content="en_US" property="og:locale"/></head>
+</link></link><link href="https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Drafts", "item": "https://jjriv.com/drafts"}, {"@type": "ListItem", "position": 3, "name": "Pelican pico github cloudflare guide", "item": "https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jreeve"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "Building a Website with Pelican, Pico CSS, GitHub Pages, and Cloudflare", "about": "articles", "datePublished": "2026-03-19 00:00"}</script><meta content="https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html" property="og:url"/><meta content="article" property="og:type"/><meta content="Building a Website with Pelican, Pico CSS, GitHub Pages, and Cloudflare" property="og:title"/><meta content="en_US" property="og:locale"/></head>
 <body>
 <header class="container">
 <nav>
@@ -22,7 +22,7 @@
 </ul>
 <ul>
 <li><a href="https://jjriv.com/about/">about me</a></li>
-<li><a href="https://jjriv.com/articles/">articles</a></li>
+<li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
 <li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg></a></li>
 <li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg></a></li>
 <li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 11l0 5"></path><path d="M8 8l0 .01"></path><path d="M12 16l0 -5"></path><path d="M16 16v-3a2 2 0 0 0 -4 0"></path></svg></a></li>
@@ -40,11 +40,25 @@
 <a href="https://jjriv.com/drafts/pelican-pico-github-cloudflare-guide.html" rel="bookmark" title="Permalink to Building a Website with Pelican, Pico CSS, GitHub Pages, and Cloudflare">Building a Website with Pelican, Pico CSS, GitHub Pages, and Cloudflare</a></h1>
 </header>
 <div class="entry-content">
-<p>Pelican is a powerful static site generator written in Python. It lets you write content in Markdown or reStructuredText, and generates a fast, customizable static website.</p>
-<p>Pico CSS is a minimal, classless CSS framework that makes your site look modern and responsive with almost no effort.</p>
-<p>GitHub Pages offers free hosting for static sites directly from your GitHub repository.</p>
-<p>Cloudflare provides domain registration, DNS management, and security, making your custom domain setup easy and robust.</p>
-<p>These are the four tools I used to build the site you are reading now. Here’s how I did it.</p>
+<p>When I set out to build this web site I wanted to use freely available tools. This article shows you how to build your own web site, step by step, using the same tools. But first, a brief overview of the tools you’ll be using:</p>
+<ul>
+<li>
+<p><a href="https://getpelican.com/">Pelican</a><br/>
+A powerful static site generator written in Python. It lets you write content in Markdown or reStructuredText, and generates a fast, customizable static website.</p>
+</li>
+<li>
+<p><a href="https://picocss.com/">Pico CSS</a><br/>
+A minimal, classless CSS framework that makes your site look modern and responsive with almost no effort.</p>
+</li>
+<li>
+<p><a href="https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site">GitHub Pages</a><br/>
+Free hosting for static sites directly from your GitHub repository.</p>
+</li>
+<li>
+<p><a href="https://www.cloudflare.com/">Cloudflare</a><br/>
+Domain registration, DNS management, and security, making your custom domain setup easy and robust.</p>
+</li>
+</ul>
 <hr/>
 <h2>1. Setting Up Pelican</h2>
 <ul>

@@ -95,6 +95,7 @@ h1,h2,h3,h4,h5,h6 {
     font-family: var(--pico-font-family-serif);
     font-weight:500;
     font-size: calc(var(--pico-font-size) * 1.25);
+    letter-spacing: -0.01rem;
 }
 
 article {
