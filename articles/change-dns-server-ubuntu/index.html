@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Pelican" name="generator"/>
+<title>How to Change the DNS Server on Ubuntu</title>
+<link href="https://jjriv.com/articles/change-dns-server-ubuntu/" rel="canonical"/>
+<link href="https://jjriv.com/theme/css/main.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Noto+Emoji:wght@400..700&amp;family=Crimson+Pro:wght@200..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://jjriv.com/feeds/all.atom.xml" rel="alternate" title="jjriv Atom Feed" type="application/atom+xml">
+<meta content="Learn how to override the default DNS server on Ubuntu using systemd-resolved, so you can quickly mitigate DNS resolution failures without waiting..." name="description"/>
+</link></link><link href="https://jjriv.com/articles/change-dns-server-ubuntu/" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Articles", "item": "https://jjriv.com/articles"}, {"@type": "ListItem", "position": 3, "name": "Change dns server ubuntu", "item": "https://jjriv.com/articles/change-dns-server-ubuntu"}, {"@type": "ListItem", "position": 4, "name": "Index", "item": "https://jjriv.com/articles/change-dns-server-ubuntu/index.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jjriv"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "How to Change the DNS Server on Ubuntu", "about": "articles", "datePublished": "2026-04-24 00:00"}</script><meta content="https://jjriv.com/articles/change-dns-server-ubuntu/" property="og:url"/><meta content="article" property="og:type"/><meta content="How to Change the DNS Server on Ubuntu" property="og:title"/><meta content="en_US" property="og:locale"/></head>
+<body>
+<header class="container">
+<nav>
+<ul>
+<li><a href="/">jjriv</a></li>
+</ul>
+<ul>
+<li><a href="https://jjriv.com/about/">about me</a></li>
+<li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
+<li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg></a></li>
+<li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg></a></li>
+<li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 11l0 5"></path><path d="M8 8l0 .01"></path><path d="M12 16l0 -5"></path><path d="M16 16v-3a2 2 0 0 0 -4 0"></path></svg></a></li>
+<li><a href="https://noc.social/@jjriv" target="_blank" title="mastodon"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-mastodon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M18.648 15.254c-1.816 1.763 -6.648 1.626 -6.648 1.626a18.262 18.262 0 0 1 -3.288 -.256c1.127 1.985 4.12 2.81 8.982 2.475c-1.945 2.013 -13.598 5.257 -13.668 -7.636l-.026 -1.154c0 -3.036 .023 -4.115 1.352 -5.633c1.671 -1.91 6.648 -1.666 6.648 -1.666s4.977 -.243 6.648 1.667c1.329 1.518 1.352 2.597 1.352 5.633s-.456 4.074 -1.352 4.944z"></path><path d="M12 11.204v-2.926c0 -1.258 -.895 -2.278 -2 -2.278s-2 1.02 -2 2.278v4.722m4 -4.722c0 -1.258 .895 -2.278 2 -2.278s2 1.02 2 2.278v4.722"></path></svg></a></li>
+</ul>
+</nav>
+</header><!-- /#banner -->
+<main class="container">
+<div class="grid">
+<div class="mask">
+<section class="body" id="content">
+<article>
+<header>
+<h1 class="entry-title">
+<a href="https://jjriv.com/articles/change-dns-server-ubuntu/" rel="bookmark" title="Permalink to How to Change the DNS Server on Ubuntu">How to Change the DNS Server on Ubuntu</a></h1>
+</header>
+<div class="entry-content">
+<p>DNS resolution failures are one of those problems that are easy to diagnose but surprisingly disruptive while you wait for someone else to fix them. The server is up, your application is running, but outbound requests start failing because the DNS server your hosting provider assigned can’t resolve certain domains.</p>
+<p>That’s exactly what happened here. A production server began returning <code>SERVFAIL</code> errors when trying to resolve certain domains through the hosting provider’s default nameserver. A quick <code>dig</code> confirmed the problem was isolated to that resolver — querying Google’s public DNS at <code>8.8.8.8</code> returned the correct records immediately.</p>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">dig</span><span class="w"> </span><span class="n">MX</span><span class="w"> </span><span class="n">ky</span><span class="p">.</span><span class="n">gov</span><span class="w"> </span><span class="mf">@10.0.80.11</span>
+
+<span class="p">;;</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="n">HEADER</span><span class="o">&lt;&lt;-</span><span class="w"> </span><span class="n">opcode</span><span class="o">:</span><span class="w"> </span><span class="n">QUERY</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="o">:</span><span class="w"> </span><span class="n">SERVFAIL</span><span class="p">,</span><span class="w"> </span><span class="kt">id</span><span class="o">:</span><span class="w"> </span><span class="mi">17255</span>
+<span class="p">;;</span><span class="w"> </span><span class="n">flags</span><span class="o">:</span><span class="w"> </span><span class="n">qr</span><span class="w"> </span><span class="n">rd</span><span class="w"> </span><span class="n">ra</span><span class="p">;</span><span class="w"> </span><span class="n">QUERY</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ANSWER</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">AUTHORITY</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">ADDITIONAL</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="n">$</span><span class="w"> </span><span class="n">dig</span><span class="w"> </span><span class="n">MX</span><span class="w"> </span><span class="n">ky</span><span class="p">.</span><span class="n">gov</span><span class="w"> </span><span class="mf">@8.8.8.8</span>
+
+<span class="p">;;</span><span class="w"> </span><span class="o">-&gt;&gt;</span><span class="n">HEADER</span><span class="o">&lt;&lt;-</span><span class="w"> </span><span class="n">opcode</span><span class="o">:</span><span class="w"> </span><span class="n">QUERY</span><span class="p">,</span><span class="w"> </span><span class="n">status</span><span class="o">:</span><span class="w"> </span><span class="n">NOERROR</span><span class="p">,</span><span class="w"> </span><span class="kt">id</span><span class="o">:</span><span class="w"> </span><span class="mi">22479</span>
+<span class="p">;;</span><span class="w"> </span><span class="n">flags</span><span class="o">:</span><span class="w"> </span><span class="n">qr</span><span class="w"> </span><span class="n">rd</span><span class="w"> </span><span class="n">ra</span><span class="w"> </span><span class="n">ad</span><span class="p">;</span><span class="w"> </span><span class="n">QUERY</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">ANSWER</span><span class="o">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="n">AUTHORITY</span><span class="o">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="n">ADDITIONAL</span><span class="o">:</span><span class="w"> </span><span class="mi">1</span>
+
+<span class="p">;;</span><span class="w"> </span><span class="n">ANSWER</span><span class="w"> </span><span class="n">SECTION</span><span class="o">:</span>
+<span class="n">ky</span><span class="p">.</span><span class="n">gov</span><span class="p">.</span><span class="w">    </span><span class="mi">21600</span><span class="w">    </span><span class="n">IN</span><span class="w">    </span><span class="n">MX</span><span class="w">    </span><span class="mi">10</span><span class="w"> </span><span class="n">mxa</span><span class="mf">-00377201.</span><span class="n">gslb</span><span class="p">.</span><span class="n">pphosted</span><span class="p">.</span><span class="n">com</span><span class="p">.</span>
+<span class="n">ky</span><span class="p">.</span><span class="n">gov</span><span class="p">.</span><span class="w">    </span><span class="mi">21600</span><span class="w">    </span><span class="n">IN</span><span class="w">    </span><span class="n">MX</span><span class="w">    </span><span class="mi">10</span><span class="w"> </span><span class="n">mxb</span><span class="mf">-00377201.</span><span class="n">gslb</span><span class="p">.</span><span class="n">pphosted</span><span class="p">.</span><span class="n">com</span><span class="p">.</span>
+</code></pre></div>
+<p>A support ticket was filed, but waiting on the hosting provider wasn’t an option. Fortunately, Ubuntu makes it straightforward to override the resolver without touching <code>/etc/resolv.conf</code> directly.</p>
+<h3>How DNS Resolution Works on Ubuntu</h3>
+<p>Modern Ubuntu servers use <a href="https://www.freedesktop.org/software/systemd/man/systemd-resolved.service.html">systemd-resolved</a> to manage DNS resolution. Rather than editing <code>/etc/resolv.conf</code> directly — which <code>systemd-resolved</code> owns and will overwrite — the right approach is to drop a configuration file into <code>/etc/systemd/resolved.conf.d/</code>. Files in that directory are merged into the resolver’s configuration at startup, letting you override defaults cleanly without editing the main config.</p>
+<h3>Step 1: Create the Configuration File</h3>
+<p>Create a new configuration file in the drop-in directory. The filename can be anything ending in <code>.conf</code>:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>vim<span class="w"> </span>/etc/systemd/resolved.conf.d/custom-dns.conf
+</code></pre></div>
+<p>Add the following contents:</p>
+<div class="highlight"><pre><span></span><code><span class="k">[Resolve]</span>
+<span class="na">DNS</span><span class="o">=</span><span class="s">8.8.8.8 1.1.1.1</span>
+<span class="na">FallbackDNS</span><span class="o">=</span><span class="s">9.9.9.9</span>
+</code></pre></div>
+<p>This tells <code>systemd-resolved</code> to use Google’s DNS (<code>8.8.8.8</code>) and Cloudflare’s DNS (<code>1.1.1.1</code>) as the primary resolvers, with Quad9 (<code>9.9.9.9</code>) as a fallback. All three are reliable public resolvers that handle billions of queries per day.</p>
+<h3>Step 2: Reload the Daemon and Restart the Resolver</h3>
+<p>After saving the file, restart <code>systemd-resolved</code>:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>systemd-resolved
+</code></pre></div>
+<h3>Step 3: Verify the Change</h3>
+<p>Confirm the new resolvers are active:</p>
+<div class="highlight"><pre><span></span><code>resolvectl<span class="w"> </span>status
+</code></pre></div>
+<p>Look for the <code>DNS Servers</code> line in the output. It should now reflect <code>8.8.8.8</code> and <code>1.1.1.1</code> rather than the old nameserver.</p>
+<p>You can also run the same <code>dig</code> query that originally failed to confirm it now resolves correctly:</p>
+<div class="highlight"><pre><span></span><code>dig<span class="w"> </span>MX<span class="w"> </span>ky.gov
+</code></pre></div>
+<h3>A Note on Reverting</h3>
+<p>If the hosting provider fixes their DNS server and you want to go back to the default, simply delete the file you created and restart the resolver:</p>
+<div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>rm<span class="w"> </span>/etc/systemd/resolved.conf.d/custom-dns.conf
+sudo<span class="w"> </span>systemctl<span class="w"> </span>restart<span class="w"> </span>systemd-resolved
+</code></pre></div>
+<p>The drop-in approach makes this kind of change easy to apply and just as easy to roll back, which is exactly what you want when working around a temporary infrastructure issue.</p>
+<footer class="post-info">
+<abbr class="published" title="2026-04-24T00:00:00-07:00">
+                Published: Fri 24 April 2026
+        </abbr>
+<p class="tags">Tags: <a href="https://jjriv.com/linux/">Linux</a> <a href="https://jjriv.com/ubuntu/">Ubuntu</a> <a href="https://jjriv.com/dns/">DNS</a> </p>
+</footer><!-- /.post-info --> </div><!-- /.entry-content -->
+</article>
+</section>
+</div>
+</div>
+</main>
+<footer class="container">
+            jjriv.com is powered by <a href="https://getpelican.com/">Pelican</a> &amp; <a href="https://picocss.com/">Pico</a>
+<span class="emoji">✨</span>
+</footer>
+</body>
+</html>
