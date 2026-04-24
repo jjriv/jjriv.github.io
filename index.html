@@ -45,45 +45,39 @@
 
 -->
     <p>
-        I'm John, a full stack engineer and system administrator with over 25 years of experience building and operating SaaS products. I write <a href="/articles/" title="read my articles">articles and tutorials</a> about software development and infrastructure. My areas of expertise include:
+        I'm John, a full stack engineer and system administrator with over 25 years of experience building and operating SaaS products. I write <a href="/articles/" title="read my articles">articles and tutorials</a> &mdash; based on personal experience &mdash; about software development and infrastructure.
     </p>
-    <ul>
-        <li>Product operations and engineering strategy</li>
-        <li>Ubuntu Linux operating systems</li>
-        <li>Apache and Nginx web servers</li>
-        <li>PostgreSQL databases</li>
-        <li>Python, PHP, and Javascript scripting languages</li>
-        <li>SaaS infrastructure and DevOps automation</li>
-        <li>Email deliverability, including DMARC, SPF, and DKIM</li>
-    </ul>
+
 </section>
 
 <section class="recent-articles">
     <h3>Recent articles</h3>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/change-dns-server-ubuntu/" rel="bookmark" title="Permalink to How to Change the DNS Server on Ubuntu">How to Change the DNS Server on Ubuntu</a></h4></header>
-            <section><p>Learn how to override the default DNS server on Ubuntu using systemd-resolved, so you can quickly mitigate DNS resolution failures without waiting on your hosting provider.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/cache-busting-css-js-python/" rel="bookmark" title="Permalink to Cache-busting CSS and Javascript with Python">Cache-busting CSS and Javascript with Python</a></h4></header>
-            <section><p>A practical guide to solving browser cache issues for static assets using a Python-based approach, with code you can drop into your deployment and templates.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/pgbouncer-postgresql-connection-pooling/" rel="bookmark" title="Permalink to How to Configure PgBouncer for PostgreSQL Connection Pooling">How to Configure PgBouncer for PostgreSQL Connection Pooling</a></h4></header>
-            <section><p>PostgreSQL spawns a new process for every client connection, which becomes expensive under load. Learn how to install and configure PgBouncer to pool connections and keep your database performing well at scale.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/postgresql-logical-replication-primary-replica-migration/" rel="bookmark" title="Permalink to Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)">Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)</a></h4></header>
-            <section><p>A practical, phased runbook for migrating PostgreSQL from an old primary/replica pair to a new primary/replica pair using logical replication for the major-version move and streaming replication for steady-state high availability.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/git-branching-strategy-shared-code/" rel="bookmark" title="Permalink to Git Branching Strategy for Shared Code Across Multiple Features">Git Branching Strategy for Shared Code Across Multiple Features</a></h4></header>
-            <section><p>When multiple feature branches depend on the same code, your branch strategy can either keep development moving or create merge chaos. This guide covers two practical approaches: daisy-chained branches and sibling branches from a shared base.</p></section>
-    </article>
-    <article>
-            <header><h4><a href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="bookmark" title="Permalink to Configuring Next.js with Nginx and PM2 for Production Deployment">Configuring Next.js with Nginx and PM2 for Production Deployment</a></h4></header>
-            <section><p>A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.</p></section>
-    </article>
+    <div class="article-grid">
+        <article class="postcard">
+            <h4><a href="https://jjriv.com/articles/change-dns-server-ubuntu/" rel="bookmark" title="How to Change the DNS Server on Ubuntu" class="postcard-link">How to Change the DNS Server on Ubuntu</a></h4>
+            <p>Learn how to override the default DNS server on Ubuntu using systemd-resolved, so you can quickly mitigate DNS resolution failures without waiting on your hosting provider.</p>
+        </article>
+        <article class="postcard">
+            <h4><a href="https://jjriv.com/articles/cache-busting-css-js-python/" rel="bookmark" title="Cache-busting CSS and Javascript with Python" class="postcard-link">Cache-busting CSS and Javascript with Python</a></h4>
+            <p>A practical guide to solving browser cache issues for static assets using a Python-based approach, with code you can drop into your deployment and templates.</p>
+        </article>
+        <article class="postcard">
+            <h4><a href="https://jjriv.com/articles/pgbouncer-postgresql-connection-pooling/" rel="bookmark" title="How to Configure PgBouncer for PostgreSQL Connection Pooling" class="postcard-link">How to Configure PgBouncer for PostgreSQL Connection Pooling</a></h4>
+            <p>PostgreSQL spawns a new process for every client connection, which becomes expensive under load. Learn how to install and configure PgBouncer to pool connections and keep your database performing well at scale.</p>
+        </article>
+        <article class="postcard">
+            <h4><a href="https://jjriv.com/articles/postgresql-logical-replication-primary-replica-migration/" rel="bookmark" title="Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)" class="postcard-link">Migrating PostgreSQL to a New Environment with Logical Replication (Primary/Replica to Primary/Replica)</a></h4>
+            <p>A practical, phased runbook for migrating PostgreSQL from an old primary/replica pair to a new primary/replica pair using logical replication for the major-version move and streaming replication for steady-state high availability.</p>
+        </article>
+        <article class="postcard">
+            <h4><a href="https://jjriv.com/articles/git-branching-strategy-shared-code/" rel="bookmark" title="Git Branching Strategy for Shared Code Across Multiple Features" class="postcard-link">Git Branching Strategy for Shared Code Across Multiple Features</a></h4>
+            <p>When multiple feature branches depend on the same code, your branch strategy can either keep development moving or create merge chaos. This guide covers two practical approaches: daisy-chained branches and sibling branches from a shared base.</p>
+        </article>
+        <article class="postcard">
+            <h4><a href="https://jjriv.com/articles/nextjs-nginx-pm2-howto/" rel="bookmark" title="Configuring Next.js with Nginx and PM2 for Production Deployment" class="postcard-link">Configuring Next.js with Nginx and PM2 for Production Deployment</a></h4>
+            <p>A comprehensive guide to deploying a Next.js application on a production server using Nginx as a reverse proxy and PM2 for process management and zero-downtime deployments.</p>
+        </article>
+    </div>
     <p>
         <a href="/articles/" title="Continue reading&hellip;">Continue reading&hellip;</a>
     </p>
