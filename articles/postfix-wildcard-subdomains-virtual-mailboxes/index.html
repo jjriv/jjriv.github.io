@@ -43,7 +43,7 @@
 <!-- Status: draft -->
 <p>This tutorial teaches you how to configure a <a href="https://www.postfix.org/">Postfix</a> mail server to receive messages addressed to any recipient and subdomain at your domain. </p>
 <p>A common use case for this configuration is a web-based software that receives emails intended for its users. For example, the mail server would accept delivery for messages sent to hello@jane.doe.com and hi@john.doe.com. The messages are then stored by Postfix in a single mailbox for further processing. </p>
-<p>Let's get started.</p>
+<p>Let’s get started.</p>
 <h3>Step 1: Configure DNS</h3>
 <p>DNS takes a while to propagate, so set this up first. We need to create A and MX records for your domain. You will need to know the IP address of your mail server. It should look like this:</p>
 <div class="highlight"><pre><span></span><code><span class="nx">Record</span><span class="w"> </span><span class="k">type</span><span class="p">:</span><span class="w"> </span><span class="nx">A</span>

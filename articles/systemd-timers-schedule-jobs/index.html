@@ -40,12 +40,12 @@
 <a href="https://jjriv.com/articles/systemd-timers-schedule-jobs/" rel="bookmark" title="Permalink to Using Systemd Timers to Schedule Recurring System Jobs">Using Systemd Timers to Schedule Recurring System Jobs</a></h1>
 </header>
 <div class="entry-content">
-<p>Most Linux administrators are familiar with cron for scheduling recurring jobs. Cron works great for simple user-level tasks. But when you're scheduling operating system-level services or long-running processes that need careful management, systemd timers are a better choice.</p>
+<p>Most Linux administrators are familiar with cron for scheduling recurring jobs. Cron works great for simple user-level tasks. But when you’re scheduling operating system-level services or long-running processes that need careful management, systemd timers are a better choice.</p>
 <p>Systemd timers provide several advantages over cron that make them worth the extra setup:</p>
-<p><strong>Job overlap prevention</strong>: Systemd timers guarantee that your scheduled job won't start if the previous instance is still running. Cron has no built-in protection against overlapping executions.</p>
-<p><strong>Better logging</strong>: All timer executions are logged to the systemd journal with timestamps for when the job ran, how long it took, and what the exit status was. You get visibility that cron simply doesn't provide.</p>
+<p><strong>Job overlap prevention</strong>: Systemd timers guarantee that your scheduled job won’t start if the previous instance is still running. Cron has no built-in protection against overlapping executions.</p>
+<p><strong>Better logging</strong>: All timer executions are logged to the systemd journal with timestamps for when the job ran, how long it took, and what the exit status was. You get visibility that cron simply doesn’t provide.</p>
 <p><strong>Manual invocation</strong>: You can trigger the job on-demand without waiting for the schedule. For example, if you need an immediate backup before maintenance, you can run it instantly.</p>
-<p><strong>Integration with systemd dependencies</strong>: You can configure timers to run after other systemd units, ensuring prerequisites are met. This isn't possible with cron.</p>
+<p><strong>Integration with systemd dependencies</strong>: You can configure timers to run after other systemd units, ensuring prerequisites are met. This isn’t possible with cron.</p>
 <p>This guide shows you how to create a systemd timer for a Python backup script that runs every night. The same approach works for any recurring system-level job.</p>
 <h3>Prerequisites</h3>
 <ul>
@@ -111,9 +111,9 @@
 <span class="na">StandardOutput</span><span class="o">=</span><span class="s">journal</span>
 <span class="na">StandardError</span><span class="o">=</span><span class="s">journal</span>
 </code></pre></div>
-<p>Let's break down what each line does:</p>
+<p>Let’s break down what each line does:</p>
 <p><strong>Description</strong>: A human-readable description of what this service does.</p>
-<p><strong>After=network.target</strong>: Ensures the network is available before running (useful if you're backing up to a remote location).</p>
+<p><strong>After=network.target</strong>: Ensures the network is available before running (useful if you’re backing up to a remote location).</p>
 <p><strong>Type=oneshot</strong>: Tells systemd this service runs once and exits, rather than continuously. This is appropriate for scripts that complete their work and stop.</p>
 <p><strong>ExecStart</strong>: The full path to the script or command to execute.</p>
 <p><strong>User=postgres</strong>: Run the script as the postgres user (adjust this to the appropriate user for your script).</p>
@@ -136,7 +136,7 @@
 <span class="k">[Install]</span>
 <span class="na">WantedBy</span><span class="o">=</span><span class="s">timers.target</span>
 </code></pre></div>
-<p>Here's what each setting does:</p>
+<p>Here’s what each setting does:</p>
 <p><strong>Description</strong>: Describes what this timer does.</p>
 <p><strong>Requires=backup-database.service</strong>: Requires the backup-database.service to exist.</p>
 <p><strong>OnCalendar=daily</strong>: Run daily. The second OnCalendar line specifies the exact time (2:00 AM).</p>
@@ -149,7 +149,7 @@
 <li><code>*-*-* 02:00:00</code> - Every day at 2 AM</li>
 <li><code>Mon *-*-* 00:00:00</code> - Every Monday at midnight</li>
 <li><code>*-*-1 03:00:00</code> - First day of every month at 3 AM</li>
-<li><code>*-01-01 00:00:00</code> - New Year's Day at midnight</li>
+<li><code>*-01-01 00:00:00</code> - New Year’s Day at midnight</li>
 <li><code>hourly</code> - Every hour on the hour</li>
 <li><code>*-*-* 09,17:00:00</code> - 9 AM and 5 PM every day</li>
 </ul>
@@ -177,7 +177,7 @@
 <p>List all active timers on your system:</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>systemctl<span class="w"> </span>list-timers
 </code></pre></div>
-<p>This shows all running timers, when they last ran, and when they'll run next.</p>
+<p>This shows all running timers, when they last ran, and when they’ll run next.</p>
 <p>To see the journal logs from your timer (useful for debugging):</p>
 <div class="highlight"><pre><span></span><code>sudo<span class="w"> </span>journalctl<span class="w"> </span>-u<span class="w"> </span>backup-database.service<span class="w"> </span>-n<span class="w"> </span><span class="m">20</span>
 </code></pre></div>
@@ -190,12 +190,12 @@
 </code></pre></div>
 <p>This is useful for testing, or if you need an immediate backup before maintenance.</p>
 <h3>Troubleshooting</h3>
-<p><strong>Timer isn't running</strong>: Check that you've enabled it with <code>systemctl enable backup-database.timer</code> and that the service file exists.</p>
+<p><strong>Timer isn’t running</strong>: Check that you’ve enabled it with <code>systemctl enable backup-database.timer</code> and that the service file exists.</p>
 <p><strong>Service keeps failing</strong>: Check the journal logs with <code>journalctl -u backup-database.service</code> to see the error messages.</p>
 <p><strong>Calendar format errors</strong>: Test your OnCalendar format with <code>systemd-analyze calendar 'your-format'</code>:</p>
 <div class="highlight"><pre><span></span><code>systemd-analyze<span class="w"> </span>calendar<span class="w"> </span><span class="s1">'*-*-* 02:00:00'</span>
 </code></pre></div>
-<p><strong>Overlapping executions</strong>: If you're concerned about a long-running job, add a check in your script to see if another instance is already running, or use <code>Type=oneshot</code> to prevent concurrent runs.</p>
+<p><strong>Overlapping executions</strong>: If you’re concerned about a long-running job, add a check in your script to see if another instance is already running, or use <code>Type=oneshot</code> to prevent concurrent runs.</p>
 <h3>When to Use Systemd Timers vs. Cron</h3>
 <p><strong>Use systemd timers when:</strong></p>
 <ul>
@@ -209,9 +209,9 @@
 <ul>
 <li>Running user-level jobs or scripts</li>
 <li>You only need simple scheduling</li>
-<li>The job runs intermittently and doesn't need close monitoring</li>
+<li>The job runs intermittently and doesn’t need close monitoring</li>
 </ul>
-<p>Systemd timers are a powerful evolution of cron that integrate seamlessly with the rest of your Linux system. With the journal providing detailed logging and systemd's built-in safety features, you get a more robust and maintainable approach to scheduling critical infrastructure jobs.</p>
+<p>Systemd timers are a powerful evolution of cron that integrate seamlessly with the rest of your Linux system. With the journal providing detailed logging and systemd’s built-in safety features, you get a more robust and maintainable approach to scheduling critical infrastructure jobs.</p>
 <footer class="post-info">
 <abbr class="published" title="2026-02-14T00:00:00-08:00">
                 Published: Sat 14 February 2026

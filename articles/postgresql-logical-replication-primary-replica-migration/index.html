@@ -143,7 +143,7 @@ pg_restore<span class="w"> </span>-d<span class="w"> </span>postgres<span class=
 <p>On publisher:</p>
 <div class="highlight"><pre><span></span><code><span class="k">SELECT</span><span class="w"> </span><span class="n">pg_current_wal_lsn</span><span class="p">();</span>
 </code></pre></div>
-<p>This is the publisher's current WAL position right now. Compare it conceptually with subscriber progress (<code>latest_end_lsn</code>) to judge lag. If the publisher keeps running away from subscriber LSNs, you are not caught up yet.</p>
+<p>This is the publisher’s current WAL position right now. Compare it conceptually with subscriber progress (<code>latest_end_lsn</code>) to judge lag. If the publisher keeps running away from subscriber LSNs, you are not caught up yet.</p>
 <p>The goal before cutover is straightforward: table sync complete and lag at/near zero.</p>
 <h2>Phase 2: Build New Replica from New Primary (Streaming Replication)</h2>
 <p>Once the new primary is receiving logical changes, build the new replica from it.</p>

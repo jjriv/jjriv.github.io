@@ -107,7 +107,7 @@ $<span class="w"> </span>sudo<span class="w"> </span>systemctl<span class="w"> <
 </code></pre></div>
 <h3>Verify that it’s working</h3>
 <p>There are two ways you can verify that your email is now signing outbound emails with a dkim signature. </p>
-<p>The first way is to simply send yourself an email. Once you've received it, copy the headers and paste them into the <a href="https://mxtoolbox.com/EmailHeaders.aspx">mxtoolbox</a> utility to analyze them. This is the most thorough way to validate your opendkim setup, as it will validate that the emails are signed correctly by your mail server and authenticated correctly by the receiving mail server. </p>
+<p>The first way is to simply send yourself an email. Once you’ve received it, copy the headers and paste them into the <a href="https://mxtoolbox.com/EmailHeaders.aspx">mxtoolbox</a> utility to analyze them. This is the most thorough way to validate your opendkim setup, as it will validate that the emails are signed correctly by your mail server and authenticated correctly by the receiving mail server. </p>
 <p>The second way is to check your mail logs. You should see the following:</p>
 <div class="highlight"><pre><span></span><code>Oct 20 00:01:02 myhost opendkim[695]: 4ABBCC1AFA: DKIM-Signature field added (s=mydkimkey, d=example.com)
 </code></pre></div>
