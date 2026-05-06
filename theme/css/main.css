@@ -1,5 +1,5 @@
 /* Imports */
-@import url("pico.grey.css");
+@import url("pico.sand.css");
 @import url("pico.colors.css");
 
 /* Global CSS variables */
@@ -16,8 +16,8 @@
   --pico-font-family-serif: "Crimson Pro", serif;
   --pico-primary-hover: var(--pico-color-pumpkin-500);
   --pico-primary-hover-underline: var(--pico-color-pumpkin-500);
-  --pico-code-background-color: var(--pico-color-grey-50);
-  --pico-primary: var(--pico-color-grey-700);
+  --pico-code-background-color: var(--pico-color-sand-50);
+  --pico-primary: var(--pico-color-sand-800);
   --pico-color: var(--pico-primary);
   --pico-h1-color: var(--pico-primary);
   --pico-h2-color: var(--pico-primary);
@@ -25,10 +25,13 @@
   --pico-h4-color: var(--pico-primary);
   --pico-h5-color: var(--pico-primary);
   --pico-h6-color: var(--pico-primary);
-  --pico-code-color: var(--pico-color-grey-600);
-  --pico-code-background-color: var(--pico-color-grey-100);
+  --pico-code-color: var(--pico-color-sand-600);
+  --pico-code-background-color: var(--pico-color-sand-100);
 
 }
+
+/* Scrollbar */
+* { scrollbar-width: thin; }
 
 /* Emoji styling */
 .emoji {
@@ -42,9 +45,12 @@ a:hover {
 html {
   background: radial-gradient(
     circle at 75% 33%,
-    var(--pico-color-grey-50),
-    var(--pico-color-grey-600)
-  );
+    color-mix(in srgb, var(--pico-color-sand-50), transparent 40%),
+    color-mix(in srgb, var(--pico-color-sand-600), transparent 40%)
+  ),
+  url('/theme/images/bg-topo-01.jpg') top center;
+  background-size: auto, 100% auto;
+  background-repeat: auto, repeat-y;
 }
 
 header {
@@ -61,7 +67,7 @@ article footer {
 
 body > footer, body > footer a {
     background-color: transparent;
-    color: var(--pico-color-grey-300);
+    color: var(--pico-color-sand-300);
 }
 
 body > footer.container {
@@ -69,14 +75,14 @@ body > footer.container {
 }
 
 body > footer a:hover {
-    color: var(--pico-color-grey-100) !important;
+    color: var(--pico-color-sand-100) !important;
     text-decoration-color: transparent;
 }
 
 nav > ul:first-child > li {
     font-size: calc(var(--pico-font-size) * 2);
     font-family: var(--pico-font-family-serif);
-    font-weight: 300;
+    font-weight: 400;
 }
 
 nav > ul:first-child > li a {
@@ -88,6 +94,7 @@ nav > ul:first-child > li a:hover {
 }
 
 .container {
+    background-color: rgba(255, 255, 255, 0.85);
     padding: calc(var(--pico-block-spacing-vertical) * 2);
 }
 
@@ -159,12 +166,12 @@ section.recent-articles {
 .postcard h4 {
     margin-bottom: 0.6rem;
     font-size: calc(var(--pico-font-size) * 1.05);
-    color: var(--pico-color-grey-700);
+    color: var(--pico-color-sand-700);
 }
 
 .postcard p {
     font-size: calc(var(--pico-font-size) * 0.88);
-    color: var(--pico-color-grey-500);
+    color: var(--pico-color-sand-500);
     margin-bottom: 0;
     flex-grow: 1;
 }
