@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<meta content="Pelican" name="generator"/>
+<title>Web Security Scanning with Claude and Kali Linux</title>
+<link href="https://jjriv.com/articles/web-security-scanning-with-claude-and-kali/" rel="canonical"/>
+<link href="https://jjriv.com/theme/css/main.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=Noto+Emoji:wght@400..700&amp;family=Crimson+Pro:wght@200..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://jjriv.com/feeds/all.atom.xml" rel="alternate" title="jjriv Atom Feed" type="application/atom+xml">
+<meta content="How to use Claude Code in a Kali Linux terminal to analyze web application security scan output — connecting findings across tools, filtering..." name="description"/>
+</link></link><link href="https://jjriv.com/articles/web-security-scanning-with-claude-and-kali/" rel="canonical"/><script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "jjriv", "item": "https://jjriv.com"}, {"@type": "ListItem", "position": 2, "name": "Articles", "item": "https://jjriv.com/articles"}, {"@type": "ListItem", "position": 3, "name": "Web security scanning with claude and kali", "item": "https://jjriv.com/articles/web-security-scanning-with-claude-and-kali"}, {"@type": "ListItem", "position": 4, "name": "Index", "item": "https://jjriv.com/articles/web-security-scanning-with-claude-and-kali/index.html"}]}</script><script type="application/ld+json">{"@context": "https://schema.org", "@type": "Article", "author": {"@type": "Person", "name": "jjriv"}, "publisher": {"@type": "Organization", "name": "jjriv"}, "headline": "Web Security Scanning with Claude and Kali Linux", "about": "articles", "datePublished": "2026-06-13 00:00"}</script><meta content="https://jjriv.com/articles/web-security-scanning-with-claude-and-kali/" property="og:url"/><meta content="article" property="og:type"/><meta content="Web Security Scanning with Claude and Kali Linux" property="og:title"/><meta content="en_US" property="og:locale"/></head>
+<body>
+<header class="container">
+<nav>
+<ul>
+<li><a href="/">jjriv</a></li>
+</ul>
+<ul>
+<li><a href="https://jjriv.com/about/">about me</a></li>
+<li class="active"><a href="https://jjriv.com/articles/">articles</a></li>
+<li><a href="https://github.com/jjriv/" target="_blank" title="github"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-github" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg></a></li>
+<li><a href="https://x.com/jjriv/" target="_blank" title="x"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-x" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4l11.733 16h4.267l-11.733 -16z"></path><path d="M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772"></path></svg></a></li>
+<li><a href="https://www.linkedin.com/in/johnjreeve/" target="_blank" title="linkedin"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-linkedin" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M8 11l0 5"></path><path d="M8 8l0 .01"></path><path d="M12 16l0 -5"></path><path d="M16 16v-3a2 2 0 0 0 -4 0"></path></svg></a></li>
+<li><a href="https://noc.social/@jjriv" target="_blank" title="mastodon"><svg class="icon icon-tabler icons-tabler-outline icon-tabler-brand-mastodon" fill="none" height="24" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewbox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h24v24H0z" fill="none" stroke="none"></path><path d="M18.648 15.254c-1.816 1.763 -6.648 1.626 -6.648 1.626a18.262 18.262 0 0 1 -3.288 -.256c1.127 1.985 4.12 2.81 8.982 2.475c-1.945 2.013 -13.598 5.257 -13.668 -7.636l-.026 -1.154c0 -3.036 .023 -4.115 1.352 -5.633c1.671 -1.91 6.648 -1.666 6.648 -1.666s4.977 -.243 6.648 1.667c1.329 1.518 1.352 2.597 1.352 5.633s-.456 4.074 -1.352 4.944z"></path><path d="M12 11.204v-2.926c0 -1.258 -.895 -2.278 -2 -2.278s-2 1.02 -2 2.278v4.722m4 -4.722c0 -1.258 .895 -2.278 2 -2.278s2 1.02 2 2.278v4.722"></path></svg></a></li>
+</ul>
+</nav>
+</header><!-- /#banner -->
+<main class="container">
+<div class="grid">
+<div class="mask">
+<section class="body" id="content">
+<article>
+<header>
+<h1 class="entry-title">
+<a href="https://jjriv.com/articles/web-security-scanning-with-claude-and-kali/" rel="bookmark" title="Permalink to Web Security Scanning with Claude and Kali Linux">Web Security Scanning with Claude and Kali Linux</a></h1>
+</header>
+<div class="entry-content">
+<p>Kali Linux ships with every tool you need to run a thorough web application security scan. The part it doesn't solve is the analysis — interpreting output, filtering false positives, deciding what to chase next, connecting findings across tools, and turning raw scan results into something actionable. That gap is exactly where running Claude from the Kali terminal pays off.</p>
+<hr/>
+<h2>Getting Started</h2>
+<p>Claude Code is Anthropic's CLI and runs in any terminal. Install it with npm:</p>
+<div class="highlight"><pre><span></span><code>npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>@anthropic-ai/claude-code
+</code></pre></div>
+<p>Then launch it from your Kali terminal:</p>
+<div class="highlight"><pre><span></span><code>claude
+</code></pre></div>
+<p>From here, you're talking to Claude with full shell access. It can run any Kali tool, read output files, follow up with additional scans, and write findings to markdown files.</p>
+<hr/>
+<h2>The Workflow</h2>
+<p>When you launch Claude Code directly in your Kali terminal, it has full access to every tool on the system. It runs scans, reads output, and surfaces findings. However, this is not a set-it-and-forget-it process. The human running the session is essential. You know things Claude doesn't: how the application is architected, which endpoints are internal-only, what a 503 from a particular route actually means in context, whether a flagged behavior is a real concern or an intentional design decision. Claude handles the mechanical work and the initial analysis; you provide the judgment. The best sessions are a conversation, not a handoff.</p>
+<p>Think of each prompt in this article as the opening line of that conversation. Where it goes from there depends on what you know about the system you're scanning and what you discover along the way.</p>
+<hr/>
+<h2>The Tools</h2>
+<h3>whatweb / Technology Fingerprinting</h3>
+<p><strong>OWASP: A05 Security Misconfiguration, A06 Vulnerable and Outdated Components</strong></p>
+<p><code>whatweb</code> identifies the technology stack — server software, JavaScript frameworks, CMS platforms — by reading HTTP headers and page content. It's the right first step because what it finds shapes every scan that follows.</p>
+<p>Prompt:</p>
+<blockquote>
+<p>Run whatweb on example.com. Tell me what the stack looks like and flag any version numbers or technology disclosures that would help an attacker.</p>
+</blockquote>
+<hr/>
+<h3>wafw00f / WAF Identification</h3>
+<p><strong>OWASP: A05 Security Misconfiguration</strong></p>
+<p><code>wafw00f</code> goes beyond detecting whether a WAF is present — it identifies which one. That distinction matters. Different WAF products have different signature sets, different bypass histories, and different coverage gaps. Knowing you're behind Cloudflare versus ModSecurity versus nothing at all changes how you interpret everything else in the scan.</p>
+<p>Prompt:</p>
+<blockquote>
+<p>Run wafw00f against example.com. If a WAF is detected, tell me which product it is and what that means for our testing — what it typically catches well and where its coverage tends to be thin. If nothing is detected, flag that as a finding.</p>
+</blockquote>
+<hr/>
+<hr/>
+<h3>sslscan &amp; sslyze / TLS Configuration</h3>
+<p><strong>OWASP: A02 Cryptographic Failures</strong></p>
+<p>These two tools cover TLS from complementary angles. <code>sslscan</code> gives a readable summary of supported protocols and cipher suites. <code>sslyze</code> goes deeper on certificate details and session configuration. Running both takes a couple of minutes.</p>
+<p>Prompt:</p>
+<blockquote>
+<p>Run sslscan and sslyze on example.com. Identify any TLS weaknesses — deprecated protocols, weak ciphers, certificate issues, missing HSTS. For each finding, tell me whether it needs immediate attention or whether it's low priority given how modern browsers actually behave.</p>
+</blockquote>
+<p>That last qualifier matters. Not every TLS finding carries the same weight. Claude distinguishes between a protocol that real clients are still negotiating versus one that's technically present but ignored by every browser in use.</p>
+<hr/>
+<h3>nikto / Web Server Misconfiguration Scanning</h3>
+<p><strong>OWASP: A05 Security Misconfiguration, A06 Vulnerable and Outdated Components</strong></p>
+<p><code>nikto</code> checks for misconfigurations, exposed files, and outdated software signatures across a broad surface. It generates significant noise against modern web apps, particularly SPAs, where client-side routing causes the server to return HTTP 200 for every path — including ones that don't exist.</p>
+<p>Nikto scans take time. Claude will run it as a background task and monitor the output file while it works on other things.</p>
+<p>Prompt:</p>
+<blockquote>
+<p>Run nikto against example.com. The site is a single-page app, so flag any findings that are likely false positives from the SPA catch-all routing — paths returning 200 that are actually just serving index.html. Confirm suspicious ones with curl before including them as findings. Rank the real findings by severity.</p>
+</blockquote>
+<p>This is where Claude adds the most value over running nikto alone. It correlates the 200 responses against the actual page content, confirms or dismisses each flag, and produces a filtered list rather than a wall of raw output.</p>
+<hr/>
+<h3>gobuster / Directory and File Enumeration</h3>
+<p><strong>OWASP: A05 Security Misconfiguration, A07 Identification and Authentication Failures</strong></p>
+<p><code>gobuster</code> discovers endpoints that aren't linked from the UI — API routes, admin paths, authentication flows, and internal service paths. On a well-configured app it surfaces the real backend structure.</p>
+<p>The SPA catch-all problem applies here too. Claude will handle it by establishing the wildcard response size first and excluding it from results:</p>
+<p>Prompt:</p>
+<blockquote>
+<p>Run gobuster against example.com using the common wordlist. First probe a non-existent path to get the wildcard response size, then exclude that length from the scan. For each real path you find, tell me what it likely does and what you'd want to probe next.</p>
+</blockquote>
+<p>Gobuster is often the pivot point in a session. What it finds tells you where to dig — OAuth endpoints suggest auth bypass testing, unknown service paths suggest further enumeration, API roots suggest method and parameter probing.</p>
+<p>Follow up prompt:</p>
+<blockquote>
+<p>Gobuster found /oauth/ on example.com. Test it for common OAuth vulnerabilities — redirect_uri bypass, missing state parameter, token leakage in referrer headers. Show me what you find.</p>
+</blockquote>
+<hr/>
+<h2>What Kali Tools Cannot Cover</h2>
+<p>Several OWASP Top 10 categories don't have meaningful automated coverage from scanning tools. Worth understanding before assuming a clean set of scans means a clean bill of health.</p>
+<p><strong>A01 — Broken Access Control</strong> requires understanding what the application is supposed to do and testing whether it enforces that. A scanner can find that an endpoint exists; it cannot determine whether the authorization logic on that endpoint is correct. This is a code review and manual testing problem.</p>
+<p><strong>A04 — Insecure Design</strong> is an architecture problem. No tool detects it.</p>
+<p><strong>A08 — Software and Data Integrity Failures</strong> — dependency vulnerabilities — are caught with tools like <code>cargo audit</code> and <code>pnpm audit</code> / <code>npm audit</code> run against the codebase, not from the outside. These aren't scanning tools; they're part of your build process.</p>
+<p><strong>A09 — Security Logging and Monitoring Failures</strong> requires access to logs and observability infrastructure. Not testable from the outside.</p>
+<p>For these OWASP categories, you will need to run Claude on the same machine as the code, and come up with prompts of your own. Claude is very good at discovering vulnerabilities, but it needs the code, not a scan target.</p>
+<hr/>
+<h2>What Claude Adds Across the Whole Session</h2>
+<p>The most useful thing Claude does in this workflow isn't interpreting any single tool's output. It's maintaining context across all of them. It remembers that the 200 responses <code>nikto</code> flagged are explained by the SPA catch-all confirmed earlier. It knows that a 502 on a path <code>gobuster</code> found means a real upstream service is down, not that the path doesn't exist. It connects what <code>whatweb</code> showed about the server configuration to what <code>gobuster</code> found about the backend structure.</p>
+<p>By the end of a session you have a set of findings that already know about each other — not a pile of individual scan outputs. Claude can write those up as GitHub issues as it goes, one per finding class, with severity ratings, reproduction steps, and fix recommendations. The output is directly actionable without a second pass to make it so.</p>
+<hr/>
+<h2>A Note on Scope</h2>
+<p>A basic familiarity with web security concepts will get you a lot further with this workflow. You don't need to be an expert, but understanding what a WAF is, why TLS configuration matters, and what an authentication flow looks like will help you ask better follow-up questions and recognize when a finding is significant. Similarly, the more you know about how your application is architected — what's behind each path, what services are running, how authentication is handled — the more useful you'll be when Claude surfaces something it can't evaluate on its own. Discovery is a collaboration, and your knowledge of web security and your system is half of it.</p>
+<p>Everything here also assumes you own the sites you're scanning or have explicit written authorization to test them. Running these tools against sites you don't control is illegal regardless of what you find. Start with a staging environment if you have one — <code>nikto</code> in particular generates traffic patterns that look like an attack in your own logs.</p>
+<footer class="post-info">
+<abbr class="published" title="2026-06-13T00:00:00-07:00">
+                Published: Sat 13 June 2026
+        </abbr>
+<p class="tags">Tags: <a href="https://jjriv.com/security/">security</a> <a href="https://jjriv.com/ai/">ai</a> </p>
+</footer><!-- /.post-info --> </div><!-- /.entry-content -->
+</article>
+</section>
+</div>
+</div>
+</main>
+<footer class="container">
+            jjriv.com is powered by <a href="https://getpelican.com/">Pelican</a> &amp; <a href="https://picocss.com/">Pico</a>
+<span class="emoji">✨</span>
+</footer>
+</body>
+</html>
