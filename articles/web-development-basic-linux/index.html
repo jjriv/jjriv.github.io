@@ -109,6 +109,20 @@ sda<span class="w">              </span><span class="m">0</span>.24<span class="
 <span class="m">192</span>.168.3.7<span class="w"> </span>-<span class="w"> </span>-<span class="w"> </span><span class="o">[</span><span class="m">17</span>/Jun/2024:12:48:18<span class="w"> </span>-0700<span class="o">]</span><span class="w"> </span><span class="s2">"GET / HTTP/1.1"</span><span class="w"> </span><span class="m">301</span><span class="w"> </span><span class="m">256</span><span class="w"> </span><span class="s2">"-"</span><span class="w"> </span><span class="s2">"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15</span>
 <span class="s2">_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36"</span>
 </code></pre></div>
+<h3>ripgrep</h3>
+<h5>A faster grep for searching codebases</h5>
+<p>The <code>rg</code> command, short for ripgrep, is a modern alternative to <code>grep</code> that’s built for speed. It recursively searches directories by default and is significantly faster than traditional grep when searching through large sets of files.</p>
+<p><em>Note: Unlike grep, ripgrep is not typically installed by default on most Linux distributions. You’ll need to install it yourself, for example with <code>sudo apt install ripgrep</code> on Ubuntu/Debian or <code>brew install ripgrep</code> on macOS.</em></p>
+<p>Ripgrep is especially well suited for searching through codebases because it automatically respects your <code>.gitignore</code> file and skips hidden <code>.git</code> and <code>.svn</code> directories. This means you get relevant results without wading through matches in dependency folders, build artifacts, or version control internals.</p>
+<p>Here’s an example of searching a project directory for a function name:</p>
+<div class="highlight"><pre><span></span><code>$<span class="w"> </span>rg<span class="w"> </span>getUserById
+src/services/user.js
+<span class="m">42</span>:export<span class="w"> </span><span class="k">function</span><span class="w"> </span>getUserById<span class="o">(</span>id<span class="o">)</span><span class="w"> </span><span class="o">{</span>
+
+src/routes/api.js
+<span class="m">15</span>:const<span class="w"> </span><span class="nv">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>getUserById<span class="o">(</span>req.params.id<span class="o">)</span><span class="p">;</span>
+</code></pre></div>
+<p>Notice that unlike the earlier <code>grep</code> example, we didn’t need to specify a filename or use <code>-r</code> to search recursively. Ripgrep also highlights matches and groups results by file, making it easier to scan.</p>
 <h3>more, less, tail</h3>
 <h5>Sifting through haystacks</h5>
 <p>When a web application is not behaving as expected we can often find out why by looking at logs on the server. For example, web server logs can tell us if the code is triggering internal server errors or not. Looking at database logs can tell us which queries are taking too long or producing errors. The more, less, and tail commands are all useful for combing through log files. </p>

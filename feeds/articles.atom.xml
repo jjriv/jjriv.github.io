@@ -1891,7 +1891,7 @@ $&lt;span class="w"&gt; &lt;/span&gt;sudo&lt;span class="w"&gt; &lt;/span&gt;sys
 &lt;p&gt;The first way is to simply send yourself an email. Once you’ve received it, copy the headers and paste them into the &lt;a href="https://mxtoolbox.com/EmailHeaders.aspx"&gt;mxtoolbox&lt;/a&gt; utility to analyze them. This is the most thorough way to validate your opendkim setup, as it will validate that the emails are signed correctly by your mail server and authenticated correctly by the receiving mail server. &lt;/p&gt;
 &lt;p&gt;The second way is to check your mail logs. You should see the following:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;Oct 20 00:01:02 myhost opendkim[695]: 4ABBCC1AFA: DKIM-Signature field added (s=mydkimkey, d=example.com)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Ubuntu"></category><category term="Postfix"></category></entry><entry><title>Linux Commands for Web Developers</title><link href="https://jjriv.com/articles/web-development-basic-linux/" rel="alternate"></link><published>2024-06-13T00:00:00-07:00</published><updated>2024-06-13T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-13:/articles/web-development-basic-linux/</id><summary type="html">&lt;p&gt;It is the responsibility of web developers to understand how their code is impacting the server environment. Here are a few essential commands to gauage your impact.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;</content><category term="articles"></category><category term="Linux"></category><category term="Ubuntu"></category><category term="Postfix"></category></entry><entry><title>Linux Commands for Web Developers</title><link href="https://jjriv.com/articles/web-development-basic-linux/" rel="alternate"></link><published>2024-06-13T00:00:00-07:00</published><updated>2024-06-13T00:00:00-07:00</updated><author><name>jjriv</name></author><id>tag:jjriv.com,2024-06-13:/articles/web-development-basic-linux/</id><summary type="html">&lt;p&gt;It is the responsibility of web developers to understand how their code is impacting the server environment. Here are a few essential commands to gauge your impact.&lt;/p&gt;</summary><content type="html">&lt;!-- Status: draft --&gt;
 
 &lt;p&gt;Having worked in full stack web development and DevOps for over two decades, I&amp;rsquo;ve experienced my fair share of launches going pear shaped. The following is an overview of Linux commands that have become indispensable in troubleshooting and measuring a web application&amp;rsquo;s impact on its hosting environment.&lt;/p&gt;
 &lt;p&gt;&lt;em&gt;Note: Most of these commands are installed by default with popular Linux distributions. However, you may have to install one or two of them.&lt;/em&gt;&lt;/p&gt;
@@ -1967,6 +1967,21 @@ sda&lt;span class="w"&gt;              &lt;/span&gt;&lt;span class="m"&gt;0&lt;/
 &lt;span class="s2"&gt;_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36&amp;quot;&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
 
+&lt;h3&gt;ripgrep&lt;/h3&gt;
+&lt;h5&gt;A faster grep for searching codebases&lt;/h5&gt;
+&lt;p&gt;The &lt;code&gt;rg&lt;/code&gt; command, short for ripgrep, is a modern alternative to &lt;code&gt;grep&lt;/code&gt; that&amp;rsquo;s built for speed. It recursively searches directories by default and is significantly faster than traditional grep when searching through large sets of files.&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;Note: Unlike grep, ripgrep is not typically installed by default on most Linux distributions. You&amp;rsquo;ll need to install it yourself, for example with &lt;code&gt;sudo apt install ripgrep&lt;/code&gt; on Ubuntu/Debian or &lt;code&gt;brew install ripgrep&lt;/code&gt; on macOS.&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;Ripgrep is especially well suited for searching through codebases because it automatically respects your &lt;code&gt;.gitignore&lt;/code&gt; file and skips hidden &lt;code&gt;.git&lt;/code&gt; and &lt;code&gt;.svn&lt;/code&gt; directories. This means you get relevant results without wading through matches in dependency folders, build artifacts, or version control internals.&lt;/p&gt;
+&lt;p&gt;Here&amp;rsquo;s an example of searching a project directory for a function name:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;code&gt;$&lt;span class="w"&gt; &lt;/span&gt;rg&lt;span class="w"&gt; &lt;/span&gt;getUserById
+src/services/user.js
+&lt;span class="m"&gt;42&lt;/span&gt;:export&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="k"&gt;function&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;getUserById&lt;span class="o"&gt;(&lt;/span&gt;id&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;{&lt;/span&gt;
+
+src/routes/api.js
+&lt;span class="m"&gt;15&lt;/span&gt;:const&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nv"&gt;user&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;getUserById&lt;span class="o"&gt;(&lt;/span&gt;req.params.id&lt;span class="o"&gt;)&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+
+&lt;p&gt;Notice that unlike the earlier &lt;code&gt;grep&lt;/code&gt; example, we didn&amp;rsquo;t need to specify a filename or use &lt;code&gt;-r&lt;/code&gt; to search recursively. Ripgrep also highlights matches and groups results by file, making it easier to scan.&lt;/p&gt;
 &lt;h3&gt;more, less, tail&lt;/h3&gt;
 &lt;h5&gt;Sifting through haystacks&lt;/h5&gt;
 &lt;p&gt;When a web application is not behaving as expected we can often find out why by looking at logs on the server. For example, web server logs can tell us if the code is triggering internal server errors or not. Looking at database logs can tell us which queries are taking too long or producing errors. The more, less, and tail commands are all useful for combing through log files. &lt;/p&gt;
